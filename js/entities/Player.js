@@ -121,7 +121,7 @@ class Player {
         return true; // Movement occurred
     }
     
-    // Update animation state (continuous smooth movement)
+    // Update animation state (continuous smooth movement with dynamic speed)
     updateAnimation(deltaTime) {
         // If no waypoints, ensure we're at the correct position
         if (this.animationWaypoints.length === 0) {
@@ -143,14 +143,38 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Movement speed (tiles per second)
-        // SDK moves at about 1 tile per 600ms, or ~1.67 tiles per second
-        // For diagonal, that's ~2.36 units per second
-        const baseSpeed = 1.67; // tiles per second
-        const actualSpeed = baseSpeed * (distance / Math.max(Math.abs(dx), Math.abs(dy), 1));
+        // ===== SDK-STYLE DYNAMIC SPEED =====
+        // Base speed should match input rate: 2 tiles per 600ms = 3.33 tiles/second
+        // But we need to account for diagonal distance
+        const tilesPerTick = 2;
+        const ticksPerSecond = 1000 / Constants.TICK_RATE;
+        const baseSpeed = tilesPerTick * ticksPerSecond; // 3.33 tiles/second
         
-        // Update segment progress
+        // Dynamic speed adjustment based on buffer size (like SDK)
+        let speedMultiplier = 1;
+        const bufferSize = this.animationWaypoints.length;
+        
+        if (bufferSize >= 4) {
+            // Way behind - catch up fast (SDK: path.length > 3)
+            speedMultiplier = 2;
+        } else if (bufferSize >= 3) {
+            // Falling behind - speed up (SDK: path.length === 3)
+            speedMultiplier = 1.5;
+        } else if (bufferSize === 0 && this.segmentProgress > 0) {
+            // Last segment - slow down slightly for smooth arrival
+            speedMultiplier = 0.9;
+        }
+        
+        // Calculate actual speed
+        // For diagonal movement, we need to move at sqrt(2) speed to cover the distance
+        // in the same time as orthogonal movement
+        const isOrthogonal = (dx === 0 || dy === 0);
+        const distanceAdjustment = isOrthogonal ? 1 : Math.sqrt(2);
+        const actualSpeed = baseSpeed * speedMultiplier * distanceAdjustment;
+        
+        // Update segment progress based on speed and time
         if (distance > 0) {
+            // Progress is speed * time / distance
             this.segmentProgress += (actualSpeed * deltaTime) / 1000 / distance;
         } else {
             this.segmentProgress = 1;
@@ -174,7 +198,7 @@ class Player {
                 this.currentAnimationTarget = null;
             }
         } else {
-            // Still animating
+            // Still animating - smooth interpolation
             this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
             this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
         }
