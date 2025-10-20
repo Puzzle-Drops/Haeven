@@ -36,7 +36,6 @@ class InputHandler {
         this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.canvas.addEventListener('click', this.handleClick.bind(this));
         this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
         
         // Keyboard events
@@ -71,18 +70,19 @@ class InputHandler {
     }
     
     handleMouseDown(event) {
-        this.mouse.isDown = true;
-        this.mouse.button = event.button;
+    this.mouse.isDown = true;
+    this.mouse.button = event.button;
+    
+    // Process click on mouse down (left button only)
+    if (event.button === 0) {
+        const screenCoords = { x: event.clientX, y: event.clientY };
+        this.processClick(screenCoords);
     }
+}
     
     handleMouseUp(event) {
         this.mouse.isDown = false;
         this.mouse.button = -1;
-    }
-    
-    handleClick(event) {
-        const screenCoords = { x: event.clientX, y: event.clientY };
-        this.processClick(screenCoords);
     }
     
     processClick(screenCoords) {
