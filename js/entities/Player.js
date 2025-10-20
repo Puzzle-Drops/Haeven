@@ -60,13 +60,21 @@ class Player {
         // Store the animation path for this tick
         this.animationPath = [];
         
-        // Move through the tiles
-        for (let i = 0; i < tilesToMove; i++) {
-            const nextTile = this.path.shift();
-            this.animationPath.push({ x: nextTile.x, y: nextTile.y });
-            this.tileX = nextTile.x;
-            this.tileY = nextTile.y;
-        }
+        // Store tiles for animation and determine final position
+let finalX = this.tileX;
+let finalY = this.tileY;
+
+for (let i = 0; i < tilesToMove; i++) {
+    const nextTile = this.path.shift();
+    this.animationPath.push({ x: nextTile.x, y: nextTile.y });
+    // Only update final position, don't update player position each iteration
+    finalX = nextTile.x;
+    finalY = nextTile.y;
+}
+
+// Jump directly to the final tile position
+this.tileX = finalX;
+this.tileY = finalY;
         
         // Reset animation progress
         this.animationProgress = 0;
