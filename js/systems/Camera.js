@@ -8,11 +8,11 @@ class Camera {
         this.x = 0;
         this.y = 0;
         
-        // Optional smooth following
-        this.smoothing = false;
-        this.smoothingSpeed = 0.1;
+        // Smooth following
+        this.smoothing = true;
+        this.smoothingSpeed = 0.1; // lerp factor
         
-        // Camera bounds
+        // World dimensions (kept for reference but not used for clamping)
         this.worldWidth = Constants.WORLD_WIDTH * Constants.TILE_SIZE;
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
@@ -22,30 +22,17 @@ class Camera {
         const newX = targetX - this.viewportWidth / 2;
         const newY = targetY - this.viewportHeight / 2;
         
-        if (this.smoothing) {
-            // Smooth camera movement
-            this.x += (newX - this.x) * this.smoothingSpeed;
-            this.y += (newY - this.y) * this.smoothingSpeed;
-        } else {
-            // Instant camera movement
-            this.x = newX;
-            this.y = newY;
-        }
+        // Always use smooth camera movement
+        this.x = this.x + (newX - this.x) * this.smoothingSpeed;
+        this.y = this.y + (newY - this.y) * this.smoothingSpeed;
         
-        // Clamp to world bounds
-        this.clampToBounds();
+        // No clamping - camera can go beyond world bounds to keep player centered
     }
     
     // Follow a player entity
     followPlayer(player) {
         const worldPos = player.getWorldPosition();
         this.centerOn(worldPos.x, worldPos.y);
-    }
-    
-    // Clamp camera to world boundaries
-    clampToBounds() {
-        this.x = Math.max(0, Math.min(this.x, this.worldWidth - this.viewportWidth));
-        this.y = Math.max(0, Math.min(this.y, this.worldHeight - this.viewportHeight));
     }
     
     // Get visible tile range
@@ -55,6 +42,8 @@ class Camera {
         const endTileX = Math.ceil((this.x + this.viewportWidth) / Constants.TILE_SIZE);
         const endTileY = Math.ceil((this.y + this.viewportHeight) / Constants.TILE_SIZE);
         
+        // Still clamp the tile range for rendering efficiency
+        // But camera position itself is not clamped
         return {
             startX: Math.max(0, startTileX),
             startY: Math.max(0, startTileY),
@@ -87,14 +76,15 @@ class Camera {
                worldY <= this.y + this.viewportHeight + margin;
     }
     
-    // Set camera bounds (for smaller or different world sizes)
+    // Set camera bounds (kept for API compatibility but doesn't clamp)
     setWorldBounds(width, height) {
         this.worldWidth = width;
         this.worldHeight = height;
-        this.clampToBounds();
+        // No clamping
     }
     
     // Enable or disable smooth camera following
+    // Kept for compatibility, but smoothing is now always on by default
     setSmoothingEnabled(enabled, speed = 0.1) {
         this.smoothing = enabled;
         this.smoothingSpeed = speed;
