@@ -37,6 +37,7 @@ class InputHandler {
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
         this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        this.canvas.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
         
         // Keyboard events
         window.addEventListener('keydown', this.handleKeyDown.bind(this));
@@ -139,6 +140,14 @@ class InputHandler {
         // Could implement right-click actions here
     }
     
+    handleWheel(event) {
+        event.preventDefault();
+        
+        // Adjust zoom based on wheel delta
+        const zoomDelta = -event.deltaY * this.camera.zoomSpeed;
+        this.camera.adjustZoom(zoomDelta);
+    }
+    
     handleKeyDown(event) {
         this.keys[event.code] = true;
         
@@ -215,6 +224,7 @@ class InputHandler {
         this.canvas.removeEventListener('mousedown', this.handleMouseDown);
         this.canvas.removeEventListener('mouseup', this.handleMouseUp);
         this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
+        this.canvas.removeEventListener('wheel', this.handleWheel);
         
         window.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('keyup', this.handleKeyUp);
