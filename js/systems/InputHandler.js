@@ -70,22 +70,24 @@ class InputHandler {
     }
     
     handleMouseDown(event) {
-    this.mouse.isDown = true;
-    this.mouse.button = event.button;
-    
-    // Process click on mouse down (left button only)
-    if (event.button === 0) {
-        const screenCoords = { x: event.clientX, y: event.clientY };
-        this.processClick(screenCoords);
+        this.mouse.isDown = true;
+        this.mouse.button = event.button;
+        
+        // Process click on mouse down (left button only)
+        if (event.button === 0) {
+            const screenCoords = { x: event.clientX, y: event.clientY };
+            // Check if Ctrl is held for walking
+            const forceWalk = event.ctrlKey;
+            this.processClick(screenCoords, forceWalk);
+        }
     }
-}
     
     handleMouseUp(event) {
         this.mouse.isDown = false;
         this.mouse.button = -1;
     }
     
-    processClick(screenCoords) {
+    processClick(screenCoords, forceWalk = false) {
         // Update mouse position
         this.updateMousePosition(screenCoords);
         
@@ -118,16 +120,15 @@ class InputHandler {
             targetX, targetY
         );
         
-        // Set player path (remove first element which is current position)
+        // Set player path with walk override if Ctrl is held
         if (path.length > 1) {
-            path.shift();
-            this.player.setPath(path);
+            path.shift(); // Remove first element (current position)
+            this.player.setPath(path, forceWalk);
         }
     }
     
     handleContextMenu(event) {
         event.preventDefault();
-        // Could implement right-click actions here
     }
     
     handleKeyDown(event) {
@@ -136,11 +137,14 @@ class InputHandler {
         // Handle specific key actions
         switch(event.code) {
             case 'Space':
+            case 'KeyS':
                 // Stop movement
                 this.player.clearPath();
                 break;
-            case 'KeyD':
-                // Toggle debug mode (handled in game)
+            case 'KeyR':
+                // Toggle run/walk
+                this.player.toggleRun();
+                console.log(`Movement mode: ${this.player.running ? 'Running' : 'Walking'}`);
                 break;
         }
     }
@@ -174,9 +178,9 @@ class InputHandler {
         
         this.touch.active = false;
         
-        // Process as a click
+        // Process as a click (default to running on mobile)
         const touch = event.changedTouches[0];
-        this.processClick({ x: touch.clientX, y: touch.clientY });
+        this.processClick({ x: touch.clientX, y: touch.clientY }, false);
     }
     
     // Check if a key is currently pressed
@@ -198,7 +202,6 @@ class InputHandler {
         this.canvas.removeEventListener('mousemove', this.handleMouseMove);
         this.canvas.removeEventListener('mousedown', this.handleMouseDown);
         this.canvas.removeEventListener('mouseup', this.handleMouseUp);
-        this.canvas.removeEventListener('click', this.handleClick);
         this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
         
         window.removeEventListener('keydown', this.handleKeyDown);
