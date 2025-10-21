@@ -61,7 +61,7 @@ class InputHandler {
         // Convert screen coordinates to game space
         const gameCoords = this.scalingSystem.screenToGame(screenCoords.x, screenCoords.y);
         
-        // Convert to world coordinates
+        // Convert to world coordinates (with isometric projection)
         const worldCoords = this.camera.screenToWorld(gameCoords.x, gameCoords.y);
         
         this.mouse.worldX = worldCoords.x;
@@ -137,7 +137,6 @@ class InputHandler {
     
     handleContextMenu(event) {
         event.preventDefault();
-        // Could implement right-click actions here
     }
     
     handleWheel(event) {
