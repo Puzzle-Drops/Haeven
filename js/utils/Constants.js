@@ -11,6 +11,14 @@ const Constants = {
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
     
+    // Isometric settings
+    ISOMETRIC: {
+        ANGLE: 30, // degrees - viewing angle (30 = ~2:1 ratio isometric)
+        TILE_HEIGHT: 64, // visual height of isometric tile in pixels
+        PLAYER_HEIGHT: 128, // how tall the vertical player sprite appears
+        PLAYER_Y_OFFSET: 32 // offset to position player correctly on tile
+    },
+    
     // Timing settings
     TICK_RATE: 600, // ms per game tick
     TARGET_FPS: 144,
