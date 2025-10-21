@@ -82,8 +82,8 @@ class Game {
                 this.togglePause();
             }
             
-            // Reset player position
-            if (event.code === 'KeyR') {
+            // Reset player position (keep R for reset, not run toggle)
+            if (event.code === 'KeyR' && event.shiftKey) {
                 this.resetPlayer();
             }
         });
@@ -134,40 +134,52 @@ class Game {
         }
     }
     
-renderDebugOverlay() {
-    const ctx = this.renderer.ctx;
-    
-    // Draw FPS counter
-    ctx.fillStyle = '#00ff00';
-    ctx.font = '16px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(
-        `FPS: ${this.gameLoop.getFPS()}`,
-        this.canvas.width - 10,
-        30
-    );
-    
-    // Draw movement mode indicator
-    ctx.textAlign = 'left';
-    ctx.fillStyle = this.player.running ? '#00ff00' : '#ffff00';
-    ctx.fillText(
-        `Mode: ${this.player.running ? 'Running' : 'Walking'}`,
-        10,
-        30
-    );
-    
-    // Draw controls help
-    ctx.fillStyle = '#00ff00';
-    ctx.fillText('Controls:', 10, this.canvas.height - 90);
-    ctx.fillText('Click - Move (run)', 10, this.canvas.height - 70);
-    ctx.fillText('Ctrl+Click - Move (walk)', 10, this.canvas.height - 50);
-    ctx.fillText('S - Stop moving | R - Toggle run/walk', 10, this.canvas.height - 30);
-    ctx.fillText('P - Pause | Shift+D - Debug', 10, this.canvas.height - 10);
-}
+    renderDebugOverlay() {
+        const ctx = this.renderer.ctx;
+        
+        // Draw FPS counter
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(
+            `FPS: ${this.gameLoop.getFPS()}`,
+            this.canvas.width - 10,
+            30
+        );
+        
+        // Draw movement mode indicator
+        ctx.textAlign = 'left';
+        ctx.fillStyle = this.player.running ? '#00ff00' : '#ffff00';
+        ctx.fillText(
+            `Mode: ${this.player.running ? 'RUNNING' : 'WALKING'}`,
+            10,
+            30
+        );
+        
+        // Draw path info
+        if (this.player.isMoving()) {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillText(
+                `Path: ${this.player.path.length} tiles | Buffer: ${this.player.animationWaypoints.length} waypoints`,
+                10,
+                50
+            );
+        }
+        
+        // Draw controls help
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText('Controls:', 10, this.canvas.height - 110);
+        ctx.fillText('Left Click - Move (run mode)', 10, this.canvas.height - 90);
+        ctx.fillText('Ctrl+Click - Move (force walk)', 10, this.canvas.height - 70);
+        ctx.fillText('S - Stop moving', 10, this.canvas.height - 50);
+        ctx.fillText('R - Toggle run/walk mode', 10, this.canvas.height - 30);
+        ctx.fillText('P - Pause | Shift+R - Reset | Shift+D - Debug', 10, this.canvas.height - 10);
+    }
     
     // Start the game
     start() {
         console.log('Starting Tile-Based RPG...');
+        console.log('Movement mode: RUNNING (press R to toggle)');
         this.gameLoop.start();
     }
     
