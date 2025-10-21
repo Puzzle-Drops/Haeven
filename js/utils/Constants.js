@@ -11,11 +11,9 @@ const Constants = {
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
     
-    // Perspective settings (true 3D perspective projection)
+    // Perspective settings (45-degree pitch)
     PERSPECTIVE: {
         Y_SCALE: 0.707, // cos(45°) - foreshortening factor for Y-axis
-        PERSPECTIVE_STRENGTH: 0.0008, // How strong the perspective effect is (vanishing point distance)
-        CAMERA_DISTANCE: 800, // Virtual camera distance from Y=0 plane
         PLAYER_HEIGHT: 100, // how tall the vertical player sprite appears
         PLAYER_Y_OFFSET: 20 // offset to position player correctly on tile
     },
