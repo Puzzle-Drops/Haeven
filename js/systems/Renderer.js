@@ -154,7 +154,7 @@ class Renderer {
         
         // Calculate perspective scale for this Y position
         const normalizedY = worldPos.y / (Constants.WORLD_HEIGHT * Constants.TILE_SIZE);
-        const perspectiveScale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
+        const perspectiveScale = 1 - (Constants.PERSPECTIVE.STRENGTH / 2) + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
         
         // Apply perspective scale to player dimensions
         const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom * perspectiveScale;
