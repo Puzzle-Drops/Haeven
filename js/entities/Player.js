@@ -151,7 +151,7 @@ class Player {
         // Walking: 1 tile per 600ms = 1.67 tiles/second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const ticksPerSecond = 1000 / Constants.TICK_RATE; // 1.67 ticks/second
-        const baseSpeed = tilesPerTick * ticksPerSecond; // 3.33 or 1.67 tiles/second
+        const baseSpeed = (tilesPerTick * ticksPerSecond) - 0.33; // 3.33 or 1.67 tiles/second
         
         // Dynamic speed adjustment based on buffer size (SDK style)
         let speedMultiplier = 1;
