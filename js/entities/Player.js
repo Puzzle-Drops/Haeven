@@ -16,6 +16,8 @@ class Player {
         // Pathfinding
         this.path = [];
         this.fullPath = []; // Store complete path for reference
+        this.plannedWaypoints = []; // Pre-processed waypoints for the full path
+        this.waypointIndex = 0; // Current index in plannedWaypoints
         
         // Movement state
         this.running = true; // Running state (default true like SDK)
@@ -44,6 +46,14 @@ class Player {
             const lastTile = path[path.length - 1];
             this.targetX = lastTile.x;
             this.targetY = lastTile.y;
+            
+            // Process the ENTIRE path into waypoints upfront (SDK style)
+            // This creates waypoints only at corners for the whole path
+            const allWaypoints = this.preprocessFullPath(path);
+            // Don't add them to animation buffer yet - that happens during processTick
+            this.plannedWaypoints = allWaypoints;
+        } else {
+            this.plannedWaypoints = [];
         }
     }
     
@@ -51,11 +61,48 @@ class Player {
     clearPath() {
         this.path = [];
         this.fullPath = [];
+        this.plannedWaypoints = [];
+        this.waypointIndex = 0;
         this.animationWaypoints = [];
         this.currentAnimationTarget = null;
         this.targetX = this.tileX;
         this.targetY = this.tileY;
         this.forceWalk = false;
+    }
+    
+    // Process the full path into waypoints (corners only)
+    preprocessFullPath(path) {
+        if (path.length === 0) return [];
+        
+        const waypoints = [];
+        let lastDirection = null;
+        
+        // Start from current position
+        let prevX = this.tileX;
+        let prevY = this.tileY;
+        
+        for (let i = 0; i < path.length; i++) {
+            // Calculate direction from previous position
+            const dx = path[i].x - prevX;
+            const dy = path[i].y - prevY;
+            const currentDirection = `${Math.sign(dx)},${Math.sign(dy)}`;
+            
+            // Add waypoint if direction changed or it's the last tile
+            if (currentDirection !== lastDirection || i === path.length - 1) {
+                waypoints.push({
+                    x: path[i].x,
+                    y: path[i].y,
+                    tileIndex: i, // Track which tile in the path this represents
+                    run: this.shouldRun() // Store run state
+                });
+                lastDirection = currentDirection;
+            }
+            
+            prevX = path[i].x;
+            prevY = path[i].y;
+        }
+        
+        return waypoints;
     }
     
     // Convert tile path to waypoints (corners only) - SDK style
@@ -103,32 +150,36 @@ class Player {
             return false;
         }
         
-        // Store the position we're moving FROM (before updating)
-        const movingFromX = this.tileX;
-        const movingFromY = this.tileY;
-        
         // Determine movement speed based on run/walk state
         const speed = this.shouldRun() ? Constants.RUN_TILES_PER_MOVE : Constants.WALK_TILES_PER_MOVE;
         const tilesToMove = Math.min(speed, this.path.length);
         
-        // Collect tiles for this tick
-        const tickTiles = [];
+        // Move through tiles
         for (let i = 0; i < tilesToMove; i++) {
             const nextTile = this.path.shift();
-            tickTiles.push({ x: nextTile.x, y: nextTile.y });
+            this.tileX = nextTile.x;
+            this.tileY = nextTile.y;
         }
         
-        // Convert to waypoints using the position we're moving FROM
-        const newWaypoints = this.preprocessPathToWaypoints(tickTiles, movingFromX, movingFromY);
-        
-        // ADD to animation buffer (SDK style - don't replace!)
-        this.animationWaypoints.push(...newWaypoints);
-        
-        // Update logical position immediately
-        if (tickTiles.length > 0) {
-            const lastTile = tickTiles[tickTiles.length - 1];
-            this.tileX = lastTile.x;
-            this.tileY = lastTile.y;
+        // Check if we've reached or passed any waypoints
+        // Add them to the animation buffer as we reach them
+        while (this.waypointIndex < this.plannedWaypoints.length) {
+            const nextWaypoint = this.plannedWaypoints[this.waypointIndex];
+            
+            // Check if we've reached this waypoint's position
+            const tilesProcessed = this.fullPath.length - this.path.length;
+            if (tilesProcessed > nextWaypoint.tileIndex) {
+                // We've passed this waypoint, add it to animation buffer
+                this.animationWaypoints.push({
+                    x: nextWaypoint.x,
+                    y: nextWaypoint.y,
+                    run: nextWaypoint.run
+                });
+                this.waypointIndex++;
+            } else {
+                // Haven't reached this waypoint yet
+                break;
+            }
         }
         
         // Update target if path is complete
@@ -136,6 +187,17 @@ class Player {
             this.targetX = this.tileX;
             this.targetY = this.tileY;
             this.forceWalk = false; // Reset walk override when path complete
+            
+            // Make sure the final waypoint is added
+            if (this.waypointIndex < this.plannedWaypoints.length) {
+                const finalWaypoint = this.plannedWaypoints[this.plannedWaypoints.length - 1];
+                this.animationWaypoints.push({
+                    x: finalWaypoint.x,
+                    y: finalWaypoint.y,
+                    run: finalWaypoint.run
+                });
+                this.waypointIndex = this.plannedWaypoints.length;
+            }
         }
         
         return true;
