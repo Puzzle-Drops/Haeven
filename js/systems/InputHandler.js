@@ -124,11 +124,19 @@ class InputHandler {
         if (path.length > 1) {
             path.shift(); // Remove first element (current position)
             this.player.setPath(path, forceWalk);
+            
+            // Log movement mode for debugging
+            if (forceWalk) {
+                console.log('Walking to destination (Ctrl+Click)');
+            } else {
+                console.log(`${this.player.running ? 'Running' : 'Walking'} to destination`);
+            }
         }
     }
     
     handleContextMenu(event) {
         event.preventDefault();
+        // Could implement right-click actions here
     }
     
     handleKeyDown(event) {
@@ -140,11 +148,15 @@ class InputHandler {
             case 'KeyS':
                 // Stop movement
                 this.player.clearPath();
+                console.log('Movement stopped');
                 break;
             case 'KeyR':
-                // Toggle run/walk
+                // Toggle run/walk mode
                 this.player.toggleRun();
                 console.log(`Movement mode: ${this.player.running ? 'Running' : 'Walking'}`);
+                break;
+            case 'KeyD':
+                // Debug mode handled in Game.js
                 break;
         }
     }
