@@ -74,25 +74,26 @@ Magic Strength - Magic strength roll - Trained by magic combat
 
 **Gathering Skills**
 
-Mine (Partner skill to Smith) - Trained by mining ore from rock sources
-
 Fish (Partner skill to Cook) - Trained by catching fish from water sources
 
-Woodcut (Partner skill to Construct) - Trained by chopping logs from tree sources
+Mine (Partner skill to Smith) - Trained by mining ore from rock sources
 
-Forage (Partner skill to Craft) - Trained by gathering materials from field sources
+Forestry (Partner skill to Craft) - Trained by chopping logs from tree sources
+
+Forage (Partner skill to Divine) - Trained by gathering materials from field sources
 
 
 
 **Processing Skills**
 
-Smith (Partner skill to Mine) - Trained by consuming ore at the Smithy
-
 Cook (Partner skill to Fish) - Trained by consuming fish at the Kitchen
 
-Construct (Partner skill to Woodcut) - Trained by consuming logs at the Lumbermill
+Smith (Partner skill to Mine) - Trained by consuming ore at the Smithy
 
-Craft (Partner skill to Forage) - Trained by crafting items from gathered materials at the ???
+Craft (Partner skill to Forestry) - Trained by crafting items from gathered materials at the Fletchery
+
+Divine (Partner skill to Forage) - Trained by consuming materials at the Apothecary
+
 
 
 
