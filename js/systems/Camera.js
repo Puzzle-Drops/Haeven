@@ -23,21 +23,49 @@ class Camera {
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
     
+    // Apply perspective projection to world coordinates
+    applyPerspective(worldX, worldY) {
+        // First apply Y-axis foreshortening
+        const perspY = worldY * Constants.PERSPECTIVE.Y_SCALE;
+        
+        // Then apply perspective scaling based on Y position
+        // Higher Y = closer to camera = larger scale
+        // Lower Y = farther from camera = smaller scale
+        const normalizedY = worldY / this.worldHeight;
+        const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
+        
+        // Apply perspective by scaling around the center
+        const centerX = this.worldWidth / 2;
+        const offsetX = (worldX - centerX) * scale;
+        
+        return {
+            x: centerX + offsetX,
+            y: perspY,
+            scale: scale // Return scale for use in rendering
+        };
+    }
+    
     // Convert world coordinates to perspective screen coordinates
     worldToPerspective(worldX, worldY) {
-        // Apply Y-axis foreshortening (45-degree pitch)
-        return {
-            x: worldX,
-            y: worldY * Constants.PERSPECTIVE.Y_SCALE
-        };
+        return this.applyPerspective(worldX, worldY);
     }
     
     // Convert perspective coordinates back to world coordinates
     perspectiveToWorld(perspX, perspY) {
         // Inverse of Y-axis foreshortening
+        const worldY = perspY / Constants.PERSPECTIVE.Y_SCALE;
+        
+        // Inverse of perspective scaling
+        const normalizedY = worldY / this.worldHeight;
+        const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
+        
+        const centerX = this.worldWidth / 2;
+        const offsetX = perspX - centerX;
+        const worldX = centerX + (offsetX / scale);
+        
         return {
-            x: perspX,
-            y: perspY / Constants.PERSPECTIVE.Y_SCALE
+            x: worldX,
+            y: worldY
         };
     }
     
@@ -90,7 +118,8 @@ class Camera {
         const persp = this.worldToPerspective(worldX, worldY);
         return {
             x: (persp.x - this.x) * this.zoom,
-            y: (persp.y - this.y) * this.zoom
+            y: (persp.y - this.y) * this.zoom,
+            scale: persp.scale // Pass scale through for rendering
         };
     }
     
