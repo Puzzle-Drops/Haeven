@@ -11,9 +11,10 @@ const Constants = {
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
     
-    // Perspective settings (45-degree pitch)
+    // Perspective settings (45-degree pitch with depth scaling)
     PERSPECTIVE: {
-        Y_SCALE: 0.707, // cos(45°) - foreshortening factor for Y-axis
+        Y_SCALE: 0.780, // Foreshortening factor for Y-axis
+        STRENGTH: 0.50, // How much objects scale with depth (0 = flat, 1 = strong)
         PLAYER_HEIGHT: 100, // how tall the vertical player sprite appears
         PLAYER_Y_OFFSET: 20 // offset to position player correctly on tile
     },
