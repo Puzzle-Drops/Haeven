@@ -30,31 +30,31 @@ class Renderer {
     // Render the game world
     renderWorld(world, camera, hoveredTile = null) {
         const visible = camera.getVisibleTiles();
+        const tileSize = camera.getEffectiveTileSize();
         
         for (let y = visible.startY; y < visible.endY; y++) {
             for (let x = visible.startX; x < visible.endX; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
-                    this.renderTile(tile, camera, hoveredTile);
+                    this.renderTile(tile, camera, hoveredTile, tileSize);
                 }
             }
         }
     }
     
     // Render a single tile
-    renderTile(tile, camera, hoveredTile) {
-        const screenPos = camera.worldToScreen(
-            tile.x * Constants.TILE_SIZE,
-            tile.y * Constants.TILE_SIZE
-        );
+    renderTile(tile, camera, hoveredTile, tileSize) {
+        const worldX = tile.x * Constants.TILE_SIZE;
+        const worldY = tile.y * Constants.TILE_SIZE;
+        const screenPos = camera.worldToScreen(worldX, worldY);
         
         // Draw tile background
         this.ctx.fillStyle = tile.getDisplayColor();
         this.ctx.fillRect(
             screenPos.x, 
             screenPos.y, 
-            Constants.TILE_SIZE, 
-            Constants.TILE_SIZE
+            tileSize, 
+            tileSize
         );
         
         // Draw tile border
@@ -63,8 +63,8 @@ class Renderer {
         this.ctx.strokeRect(
             screenPos.x, 
             screenPos.y, 
-            Constants.TILE_SIZE, 
-            Constants.TILE_SIZE
+            tileSize, 
+            tileSize
         );
         
         // Draw hover effect
@@ -73,20 +73,23 @@ class Renderer {
             this.ctx.fillRect(
                 screenPos.x, 
                 screenPos.y, 
-                Constants.TILE_SIZE, 
-                Constants.TILE_SIZE
+                tileSize, 
+                tileSize
             );
         }
     }
     
     // Render tile highlights (current position, destination)
     renderTileHighlights(player, camera) {
+        const tileSize = camera.getEffectiveTileSize();
+        
         // Highlight current player tile
         this.renderTileHighlight(
             player.tileX, 
             player.tileY, 
             Constants.COLORS.CURRENT_TILE, 
-            camera
+            camera,
+            tileSize
         );
         
         // Highlight destination tile if different from current
@@ -95,25 +98,25 @@ class Renderer {
                 player.targetX, 
                 player.targetY, 
                 Constants.COLORS.DESTINATION_TILE, 
-                camera
+                camera,
+                tileSize
             );
         }
     }
     
     // Render a tile highlight border
-    renderTileHighlight(tileX, tileY, color, camera) {
-        const screenPos = camera.worldToScreen(
-            tileX * Constants.TILE_SIZE,
-            tileY * Constants.TILE_SIZE
-        );
+    renderTileHighlight(tileX, tileY, color, camera, tileSize) {
+        const worldX = tileX * Constants.TILE_SIZE;
+        const worldY = tileY * Constants.TILE_SIZE;
+        const screenPos = camera.worldToScreen(worldX, worldY);
         
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 3;
         this.ctx.strokeRect(
             screenPos.x + 2, 
             screenPos.y + 2, 
-            Constants.TILE_SIZE - 4, 
-            Constants.TILE_SIZE - 4
+            tileSize - 4, 
+            tileSize - 4
         );
     }
     
@@ -121,6 +124,7 @@ class Renderer {
     renderPlayer(player, camera) {
         const worldPos = player.getWorldPosition();
         const screenPos = camera.worldToScreen(worldPos.x, worldPos.y);
+        const radius = player.radius * camera.zoom;
         
         // Draw player circle
         this.ctx.fillStyle = player.color;
@@ -128,7 +132,7 @@ class Renderer {
         this.ctx.arc(
             screenPos.x, 
             screenPos.y, 
-            player.radius, 
+            radius, 
             0, 
             Math.PI * 2
         );
@@ -144,17 +148,17 @@ class Renderer {
     renderPath(path, camera) {
         if (!path || path.length === 0) return;
         
+        const tileSize = camera.getEffectiveTileSize();
+        
         this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
         this.ctx.lineWidth = 2;
         this.ctx.setLineDash([5, 5]);
         
         this.ctx.beginPath();
         for (let i = 0; i < path.length; i++) {
-            const worldPos = {
-                x: path[i].x * Constants.TILE_SIZE + Constants.TILE_SIZE / 2,
-                y: path[i].y * Constants.TILE_SIZE + Constants.TILE_SIZE / 2
-            };
-            const screenPos = camera.worldToScreen(worldPos.x, worldPos.y);
+            const worldX = path[i].x * Constants.TILE_SIZE + Constants.TILE_SIZE / 2;
+            const worldY = path[i].y * Constants.TILE_SIZE + Constants.TILE_SIZE / 2;
+            const screenPos = camera.worldToScreen(worldX, worldY);
             
             if (i === 0) {
                 this.ctx.moveTo(screenPos.x, screenPos.y);
@@ -180,38 +184,25 @@ class Renderer {
     }
     
     // Main render method
-render(world, player, camera, hoveredTile = null, debug = false) {
-    // Clear canvas
-    this.clear();
-    
-    // Save context and apply zoom transform
-    this.ctx.save();
-    this.ctx.scale(camera.zoom, camera.zoom);
-    
-    // Render layers
-    this.renderWorld(world, camera, hoveredTile);
-    this.renderTileHighlights(player, camera);
-    this.renderPlayer(player, camera);
-    
-    // Optional debug rendering
-    if (debug) {
-        this.renderPath(player.path, camera);
+    render(world, player, camera, hoveredTile = null, debug = false) {
+        // Clear canvas
+        this.clear();
+        
+        // Render layers (zoom is handled in individual render methods via camera)
+        this.renderWorld(world, camera, hoveredTile);
+        this.renderTileHighlights(player, camera);
+        this.renderPlayer(player, camera);
+        
+        // Optional debug rendering
+        if (debug) {
+            this.renderPath(player.path, camera);
+            this.renderDebugInfo({
+                'Player Pos': `${player.tileX}, ${player.tileY}`,
+                'Animation': `${player.animX.toFixed(2)}, ${player.animY.toFixed(2)}`,
+                'Path Length': player.path.length,
+                'Target': `${player.targetX}, ${player.targetY}`,
+                'Zoom': `${(camera.zoom * 100).toFixed(0)}%`
+            });
+        }
     }
-    
-    // Restore context
-    this.ctx.restore();
-    
-    // Render debug info without zoom (in screen space)
-    if (debug) {
-        this.renderDebugInfo({
-            'Player Pos': `${player.tileX}, ${player.tileY}`,
-            'Animation': `${player.animX.toFixed(2)}, ${player.animY.toFixed(2)}`,
-            'Path Length': player.path.length,
-            'Target': `${player.targetX}, ${player.targetY}`,
-            'Zoom': `${(camera.zoom * 100).toFixed(0)}%`
-        });
-    }
-}
-
-
 }
