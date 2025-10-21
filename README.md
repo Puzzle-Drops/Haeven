@@ -229,6 +229,114 @@ Zachary's Zombie Problem            57
 - Level requirements for each spell
 - Includes teleports, healing conversions, and utility spells
 
+## Combo Eating System
+
+The game allows players to consume multiple items on the same tick through a cascading delay system. This creates strategic depth in food management during combat.
+
+### Three-Tier Food System
+
+1. **Main Food (Fish)** - Primary healing source
+   - Raw Minnow → Minnow (3 HP, 3-tick delay)
+   - Raw Brookfin → Brookfin (6 HP, 3-tick delay)
+   - Raw Inkblot Squid → Inkblot Squid (5 HP, 1-tick delay)
+   - Raw Koi → Koi (9 HP, 3-tick delay)
+   - Raw Pikelet → Pikelet (12 HP, 3-tick delay)
+   - Raw Glowcap Squid → Glowcap Squid (10 HP, 1-tick delay)
+   - Raw Carp → Carp (15 HP, 3-tick delay)
+   - Raw Eel → Eel (18 HP, 3-tick delay)
+   - Raw Starlace Squid → Starlace Squid (15 HP, 1-tick delay)
+   - Raw Moonshark → Moonshark (21 HP, 3-tick delay)
+   - Raw Lilviathan → Lilviathan (24 HP, 3-tick delay)
+
+2. **Combo Food (Squid)** - Secondary instant healing
+   - Inkblot Squid (5 HP, 1-tick delay)
+   - Glowcap Squid (10 HP, 1-tick delay)
+   - Starlace Squid (15 HP, 1-tick delay)
+
+3. **Potions** - Combat stat boosts
+   - Spirit Potions (T1-T5: +4 to +20 Spirit)
+   - Melee Potions (T1-T5: +4 to +20 Strike/Cleave for 5 minutes)
+   - Ranged Potions (T1-T5: +4 to +20 Mark/Loose for 5 minutes)
+   - Magic Potions (T1-T5: +4 to +20 Weave/Channel for 5 minutes)
+
+### Eating Mechanics
+
+**Delay System:**
+Each food tier has its own consumption delay (cooldown) that prevents eating the same tier again:
+- Main Food: 3-tick delay
+- Squid: 1-tick delay
+- Potions: 3-tick delay
+
+**Combo Eating Rules:**
+Players can consume one item from each tier on the same game tick, but **order matters**:
+
+**Correct Order:** Main Food → Squid → Potion
+- Eating main food only sets main food delay
+- Squid can still be eaten (checks squid delay separately)
+- Potion can still be drunk (checks potion delay separately)
+- All three items consumed on same tick
+
+**Wrong Order:** Potion → Squid → Main Food
+- Drinking potion sets ALL delay timers
+- Blocks subsequent eating attempts on that tick
+- Only potion is consumed
+
+**Technical Implementation:**
+```
+Tier 1 (Main Food):   Sets foodDelay = 3
+Tier 2 (Squid):       Sets foodDelay = 3, comboDelay = 1  
+Tier 3 (Potion):      Sets foodDelay = 3, comboDelay = 1, potionDelay = 3
+```
+
+The cascading effect means higher tiers block lower tiers, creating the order requirement.
+
+### Combat Interaction
+
+- **Attack Delay Penalty:** Consuming main food or squid adds 3 ticks to attack delay
+- **Potion Exception:** Potions set food delays but do NOT add attack delay
+
+**Example Timeline:**
+```
+Tick 0: Click Minnow + Inkblot Squid + Spirit Potion
+        - Actions queued in input controller
+        - No changes yet
+
+Tick 1: Input actions execute → Items consumed
+        - Minnow healing: +3 HP
+        - Inkblot Squid healing: +5 HP  
+        - Spirit Potion: +4 Spirit
+        - Total healing: 8 HP this tick
+        - Attack delay: +6 ticks (3 from Minnow + 3 from Squid)
+        - Food delay set to 3
+        - Combo delay set to 1
+        - Potion delay set to 3
+        
+Tick 2: Delays tick down
+        - Food delay: 2 remaining
+        - Combo delay: 0 (can eat squid again)
+        - Potion delay: 2 remaining
+        - Attack delay: 5 remaining
+
+Tick 3: Delays tick down
+        - Food delay: 1 remaining
+        - Combo delay: 0
+        - Potion delay: 1 remaining
+        - Attack delay: 4 remaining
+
+Tick 4: Delays tick down
+        - Food delay: 0 (can eat main food again)
+        - Combo delay: 0
+        - Potion delay: 0 (can drink potion again)
+        - Attack delay: 3 remaining
+
+Tick 5: Attack delay: 2 remaining
+Tick 6: Attack delay: 1 remaining
+Tick 7: Attack delay: 0 (can attack again)
+
+Note: If you had an attack queued when you ate on Tick 1, 
+      that attack would be delayed by 6 additional ticks (until Tick 7)
+```
+
 ## Gathering & Processing Resources
 
 ### Resource Structure
@@ -261,7 +369,6 @@ Each gathering skill follows the same progression:
 - **Spirit Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20)
 
 **Combo Eating:** Can consume 1 main food + 1 squid + 1 potion per tick
-**Eat Delay:** 3 ticks between eating attempts
 
 ### Mine → Smith
 **Primary Resources (Every 10 levels):**
