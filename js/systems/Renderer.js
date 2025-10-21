@@ -180,24 +180,38 @@ class Renderer {
     }
     
     // Main render method
-    render(world, player, camera, hoveredTile = null, debug = false) {
-        // Clear canvas
-        this.clear();
-        
-        // Render layers
-        this.renderWorld(world, camera, hoveredTile);
-        this.renderTileHighlights(player, camera);
-        this.renderPlayer(player, camera);
-        
-        // Optional debug rendering
-        if (debug) {
-            this.renderPath(player.path, camera);
-            this.renderDebugInfo({
-                'Player Pos': `${player.tileX}, ${player.tileY}`,
-                'Animation': `${player.animX.toFixed(2)}, ${player.animY.toFixed(2)}`,
-                'Path Length': player.path.length,
-                'Target': `${player.targetX}, ${player.targetY}`
-            });
-        }
+render(world, player, camera, hoveredTile = null, debug = false) {
+    // Clear canvas
+    this.clear();
+    
+    // Save context and apply zoom transform
+    this.ctx.save();
+    this.ctx.scale(camera.zoom, camera.zoom);
+    
+    // Render layers
+    this.renderWorld(world, camera, hoveredTile);
+    this.renderTileHighlights(player, camera);
+    this.renderPlayer(player, camera);
+    
+    // Optional debug rendering
+    if (debug) {
+        this.renderPath(player.path, camera);
     }
+    
+    // Restore context
+    this.ctx.restore();
+    
+    // Render debug info without zoom (in screen space)
+    if (debug) {
+        this.renderDebugInfo({
+            'Player Pos': `${player.tileX}, ${player.tileY}`,
+            'Animation': `${player.animX.toFixed(2)}, ${player.animY.toFixed(2)}`,
+            'Path Length': player.path.length,
+            'Target': `${player.targetX}, ${player.targetY}`,
+            'Zoom': `${(camera.zoom * 100).toFixed(0)}%`
+        });
+    }
+}
+
+
 }
