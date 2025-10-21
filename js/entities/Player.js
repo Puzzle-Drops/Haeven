@@ -15,12 +15,14 @@ class Player {
         
         // Pathfinding
         this.path = [];
+        this.fullPath = []; // NEW: Store complete path for reference
         
-        // ===== NEW ANIMATION SYSTEM =====
-        // Continuous animation waypoints (like SDK's path buffer)
+        // Movement state
+        this.running = true; // NEW: Running state (default true like SDK)
+        this.forceWalk = false; // NEW: Temporary walk override
+        
+        // Animation system (SDK-style)
         this.animationWaypoints = [];
-        
-        // Current animation segment
         this.currentAnimationStart = { x: startX, y: startY };
         this.currentAnimationTarget = null;
         this.segmentProgress = 0;
@@ -32,8 +34,12 @@ class Player {
     }
     
     // Set a new path for the player to follow
-    setPath(path) {
+    setPath(path, forceWalk = false) {
+        // Store the complete path
+        this.fullPath = [...path];
         this.path = path;
+        this.forceWalk = forceWalk;
+        
         if (path.length > 0) {
             const lastTile = path[path.length - 1];
             this.targetX = lastTile.x;
@@ -44,13 +50,15 @@ class Player {
     // Clear current path and animation
     clearPath() {
         this.path = [];
-        this.animationWaypoints = []; // Clear animation buffer
-        this.currentAnimationTarget = null; // Stop current animation
+        this.fullPath = [];
+        this.animationWaypoints = [];
+        this.currentAnimationTarget = null;
         this.targetX = this.tileX;
         this.targetY = this.tileY;
+        this.forceWalk = false;
     }
     
-    // Convert tile path to waypoints (corners only)
+    // Convert tile path to waypoints (corners only) - SDK style
     preprocessPathToWaypoints(tiles) {
         if (tiles.length <= 1) return tiles;
         
@@ -74,7 +82,11 @@ class Player {
             
             // Add waypoint if direction changed or it's the last tile
             if (currentDirection !== lastDirection || i === tiles.length - 1) {
-                waypoints.push(tiles[i]);
+                waypoints.push({
+                    x: tiles[i].x,
+                    y: tiles[i].y,
+                    run: this.shouldRun() // Store run state with waypoint
+                });
             }
             
             lastDirection = currentDirection;
@@ -83,14 +95,20 @@ class Player {
         return waypoints;
     }
     
-    // Process movement for this game tick
+    // Determine if we should run or walk
+    shouldRun() {
+        return this.running && !this.forceWalk;
+    }
+    
+    // Process movement for this game tick (SDK style)
     processTick() {
         if (this.path.length === 0) {
-            return false; // No movement
+            return false;
         }
         
-        // Determine how many tiles to move this tick (1 or 2)
-        const tilesToMove = Math.min(Constants.MAX_TILES_PER_MOVE, this.path.length);
+        // Determine movement speed based on run/walk state
+        const speed = this.shouldRun() ? Constants.RUN_TILES_PER_MOVE : Constants.WALK_TILES_PER_MOVE;
+        const tilesToMove = Math.min(speed, this.path.length);
         
         // Collect tiles for this tick
         const tickTiles = [];
@@ -99,13 +117,13 @@ class Player {
             tickTiles.push({ x: nextTile.x, y: nextTile.y });
         }
         
-        // Convert to waypoints and ADD to animation buffer (don't replace!)
+        // Convert to waypoints (corner compression)
         const newWaypoints = this.preprocessPathToWaypoints(tickTiles);
         
-        // Add new waypoints to the animation buffer
+        // ADD to animation buffer (SDK style - don't replace!)
         this.animationWaypoints.push(...newWaypoints);
         
-        // Update logical position immediately (game state)
+        // Update logical position immediately
         if (tickTiles.length > 0) {
             const lastTile = tickTiles[tickTiles.length - 1];
             this.tileX = lastTile.x;
@@ -116,12 +134,13 @@ class Player {
         if (this.path.length === 0) {
             this.targetX = this.tileX;
             this.targetY = this.tileY;
+            this.forceWalk = false; // Reset walk override when path complete
         }
         
-        return true; // Movement occurred
+        return true;
     }
     
-    // Update animation state (continuous smooth movement with dynamic speed)
+    // Update animation state (SDK-style with dynamic speed)
     updateAnimation(deltaTime) {
         // If no waypoints, ensure we're at the correct position
         if (this.animationWaypoints.length === 0) {
@@ -143,38 +162,33 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // ===== SDK-STYLE DYNAMIC SPEED =====
-        // Base speed should match input rate: 2 tiles per 600ms = 3.33 tiles/second
-        // But we need to account for diagonal distance
-        const tilesPerTick = 2;
+        // SDK-STYLE DYNAMIC SPEED
+        const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond; // 3.33 tiles/second
+        const baseSpeed = tilesPerTick * ticksPerSecond;
         
-        // Dynamic speed adjustment based on buffer size (like SDK)
+        // Dynamic speed adjustment based on buffer size (SDK style)
         let speedMultiplier = 1;
         const bufferSize = this.animationWaypoints.length;
         
         if (bufferSize >= 4) {
-            // Way behind - catch up fast (SDK: path.length > 3)
+            // Way behind - catch up fast
             speedMultiplier = 2;
         } else if (bufferSize >= 3) {
-            // Falling behind - speed up (SDK: path.length === 3)
+            // Falling behind - speed up
             speedMultiplier = 1.5;
         } else if (bufferSize === 0 && this.segmentProgress > 0) {
             // Last segment - slow down slightly for smooth arrival
             speedMultiplier = 0.9;
         }
         
-        // Calculate actual speed
-        // For diagonal movement, we need to move at sqrt(2) speed to cover the distance
-        // in the same time as orthogonal movement
+        // Account for diagonal movement
         const isOrthogonal = (dx === 0 || dy === 0);
         const distanceAdjustment = isOrthogonal ? 1 : Math.sqrt(2);
         const actualSpeed = baseSpeed * speedMultiplier * distanceAdjustment;
         
-        // Update segment progress based on speed and time
+        // Update segment progress
         if (distance > 0) {
-            // Progress is speed * time / distance
             this.segmentProgress += (actualSpeed * deltaTime) / 1000 / distance;
         } else {
             this.segmentProgress = 1;
@@ -202,6 +216,11 @@ class Player {
             this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
             this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
         }
+    }
+    
+    // Toggle running state
+    toggleRun() {
+        this.running = !this.running;
     }
     
     // Get world position in pixels
