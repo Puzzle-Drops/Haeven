@@ -27,7 +27,7 @@ class Renderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
-    // Render the game world with isometric projection
+    // Render the game world with perspective projection
     renderWorld(world, camera, hoveredTile = null) {
         const visible = camera.getVisibleTiles();
         
@@ -42,13 +42,9 @@ class Renderer {
             }
         }
         
-        // Sort tiles for proper isometric drawing order (back to front)
-        // In isometric, tiles with smaller (x + y) are further back
-        tilesToRender.sort((a, b) => {
-            const sumA = a.x + a.y;
-            const sumB = b.x + b.y;
-            return sumA - sumB;
-        });
+        // Sort tiles for proper depth (back to front)
+        // Tiles with smaller Y are further back
+        tilesToRender.sort((a, b) => a.y - b.y);
         
         // Render sorted tiles
         for (const tile of tilesToRender) {
@@ -56,10 +52,9 @@ class Renderer {
         }
     }
     
-    // Render a single tile in isometric projection
+    // Render a single tile with perspective projection
     renderTile(tile, camera, hoveredTile) {
         const tileSize = Constants.TILE_SIZE;
-        const tileHeight = Constants.ISOMETRIC.TILE_HEIGHT;
         
         // Get the four corners of the tile in world space
         const topLeft = { x: tile.x * tileSize, y: tile.y * tileSize };
@@ -67,13 +62,13 @@ class Renderer {
         const bottomLeft = { x: tile.x * tileSize, y: (tile.y + 1) * tileSize };
         const bottomRight = { x: (tile.x + 1) * tileSize, y: (tile.y + 1) * tileSize };
         
-        // Convert to screen space
+        // Convert to screen space (with Y-axis foreshortening)
         const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
         const screenTR = camera.worldToScreen(topRight.x, topRight.y);
         const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
         const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
         
-        // Draw isometric tile as a parallelogram
+        // Draw tile as a rectangle (foreshortened on Y-axis)
         this.ctx.fillStyle = tile.getDisplayColor();
         this.ctx.beginPath();
         this.ctx.moveTo(screenTL.x, screenTL.y);
@@ -122,7 +117,7 @@ class Renderer {
         }
     }
     
-    // Render a tile highlight border in isometric
+    // Render a tile highlight border with perspective
     renderTileHighlight(tileX, tileY, color, camera) {
         const tileSize = Constants.TILE_SIZE;
         
@@ -154,12 +149,12 @@ class Renderer {
     renderPlayer(player, camera) {
         const worldPos = player.getWorldPosition();
         
-        // Get the base position on the ground
+        // Get the base position on the ground (foreshortened)
         const baseScreen = camera.worldToScreen(worldPos.x, worldPos.y);
         
         // Offset upward to make player appear vertical/standing
-        const playerHeight = Constants.ISOMETRIC.PLAYER_HEIGHT * camera.zoom;
-        const yOffset = Constants.ISOMETRIC.PLAYER_Y_OFFSET * camera.zoom;
+        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom;
+        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom;
         
         const playerScreen = {
             x: baseScreen.x,
@@ -167,6 +162,20 @@ class Renderer {
         };
         
         const radius = player.radius * camera.zoom;
+        
+        // Draw shadow on the ground first (ellipse for depth)
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(
+            baseScreen.x,
+            baseScreen.y,
+            radius * 0.8,
+            radius * 0.4,
+            0,
+            0,
+            Math.PI * 2
+        );
+        this.ctx.fill();
         
         // Draw player circle (vertical/standing)
         this.ctx.fillStyle = player.color;
@@ -184,20 +193,6 @@ class Renderer {
         this.ctx.strokeStyle = player.outlineColor;
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
-        
-        // Draw a simple shadow on the ground for depth
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(
-            baseScreen.x,
-            baseScreen.y,
-            radius * 0.8,
-            radius * 0.4,
-            0,
-            0,
-            Math.PI * 2
-        );
-        this.ctx.fill();
     }
     
     // Render the path (for debugging)
