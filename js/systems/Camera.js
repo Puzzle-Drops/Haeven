@@ -23,20 +23,22 @@ class Camera {
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
     
-    // Convert world coordinates to isometric screen coordinates
-    worldToIsometric(worldX, worldY) {
-        // Standard isometric projection
-        const isoX = (worldX - worldY);
-        const isoY = (worldX + worldY) * 0.5;
-        return { x: isoX, y: isoY };
+    // Convert world coordinates to perspective screen coordinates
+    worldToPerspective(worldX, worldY) {
+        // Apply Y-axis foreshortening (45-degree pitch)
+        return {
+            x: worldX,
+            y: worldY * Constants.PERSPECTIVE.Y_SCALE
+        };
     }
     
-    // Convert isometric coordinates back to world coordinates
-    isometricToWorld(isoX, isoY) {
-        // Inverse isometric projection
-        const worldX = (isoX + 2 * isoY) * 0.5;
-        const worldY = (2 * isoY - isoX) * 0.5;
-        return { x: worldX, y: worldY };
+    // Convert perspective coordinates back to world coordinates
+    perspectiveToWorld(perspX, perspY) {
+        // Inverse of Y-axis foreshortening
+        return {
+            x: perspX,
+            y: perspY / Constants.PERSPECTIVE.Y_SCALE
+        };
     }
     
     // Center camera on a target position
@@ -54,11 +56,11 @@ class Camera {
     // Follow a player entity
     followPlayer(player) {
         const worldPos = player.getWorldPosition();
-        const isoPos = this.worldToIsometric(worldPos.x, worldPos.y);
-        this.centerOn(isoPos.x, isoPos.y);
+        const perspPos = this.worldToPerspective(worldPos.x, worldPos.y);
+        this.centerOn(perspPos.x, perspPos.y);
     }
     
-    // Get visible tile range (rough estimate for isometric view)
+    // Get visible tile range
     getVisibleTiles() {
         const zoomedWidth = this.viewportWidth / this.zoom;
         const zoomedHeight = this.viewportHeight / this.zoom;
@@ -69,7 +71,7 @@ class Camera {
         const bottomLeft = this.screenToWorld(0, zoomedHeight);
         const bottomRight = this.screenToWorld(zoomedWidth, zoomedHeight);
         
-        // Find the bounding box in tile coordinates
+        // Find the bounding box in tile coordinates (add padding for safety)
         const minTileX = Math.floor(Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x) / Constants.TILE_SIZE) - 2;
         const maxTileX = Math.ceil(Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x) / Constants.TILE_SIZE) + 2;
         const minTileY = Math.floor(Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y) / Constants.TILE_SIZE) - 2;
@@ -83,32 +85,32 @@ class Camera {
         };
     }
     
-    // Convert world coordinates to screen coordinates (with isometric projection)
+    // Convert world coordinates to screen coordinates (with perspective projection)
     worldToScreen(worldX, worldY) {
-        const iso = this.worldToIsometric(worldX, worldY);
+        const persp = this.worldToPerspective(worldX, worldY);
         return {
-            x: (iso.x - this.x) * this.zoom,
-            y: (iso.y - this.y) * this.zoom
+            x: (persp.x - this.x) * this.zoom,
+            y: (persp.y - this.y) * this.zoom
         };
     }
     
-    // Convert screen coordinates to world coordinates (with inverse isometric projection)
+    // Convert screen coordinates to world coordinates (with inverse perspective projection)
     screenToWorld(screenX, screenY) {
-        const isoX = screenX / this.zoom + this.x;
-        const isoY = screenY / this.zoom + this.y;
-        return this.isometricToWorld(isoX, isoY);
+        const perspX = screenX / this.zoom + this.x;
+        const perspY = screenY / this.zoom + this.y;
+        return this.perspectiveToWorld(perspX, perspY);
     }
     
     // Check if a world position is visible
     isVisible(worldX, worldY, margin = 0) {
         const zoomedWidth = this.viewportWidth / this.zoom;
         const zoomedHeight = this.viewportHeight / this.zoom;
-        const iso = this.worldToIsometric(worldX, worldY);
+        const persp = this.worldToPerspective(worldX, worldY);
         
-        return iso.x >= this.x - margin &&
-               iso.x <= this.x + zoomedWidth + margin &&
-               iso.y >= this.y - margin &&
-               iso.y <= this.y + zoomedHeight + margin;
+        return persp.x >= this.x - margin &&
+               persp.x <= this.x + zoomedWidth + margin &&
+               persp.y >= this.y - margin &&
+               persp.y <= this.y + zoomedHeight + margin;
     }
     
     // Set camera bounds
@@ -134,12 +136,12 @@ class Camera {
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
         
         if (this.zoom !== oldZoom) {
-            const centerIso = this.worldToIsometric(centerWorld.x, centerWorld.y);
+            const centerPersp = this.worldToPerspective(centerWorld.x, centerWorld.y);
             const zoomedWidth = this.viewportWidth / this.zoom;
             const zoomedHeight = this.viewportHeight / this.zoom;
             
-            this.x = centerIso.x - zoomedWidth / 2;
-            this.y = centerIso.y - zoomedHeight / 2;
+            this.x = centerPersp.x - zoomedWidth / 2;
+            this.y = centerPersp.y - zoomedHeight / 2;
         }
     }
     
