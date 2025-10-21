@@ -23,22 +23,44 @@ class Camera {
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
     
-    // Convert world coordinates to perspective screen coordinates
+    // Convert world coordinates to perspective screen coordinates with scaling
     worldToPerspective(worldX, worldY) {
-        // Apply Y-axis foreshortening (45-degree pitch)
+        // Calculate perspective scale based on Y distance
+        // Objects further away (smaller Y in world) appear smaller
+        // Objects closer (larger Y in world) appear larger
+        const depth = Constants.PERSPECTIVE.CAMERA_DISTANCE + worldY;
+        const scale = Constants.PERSPECTIVE.CAMERA_DISTANCE / depth;
+        
+        // Apply perspective scaling and Y-axis foreshortening
         return {
-            x: worldX,
-            y: worldY * Constants.PERSPECTIVE.Y_SCALE
+            x: worldX * scale,
+            y: worldY * Constants.PERSPECTIVE.Y_SCALE * scale,
+            scale: scale // Return scale for use in rendering
         };
     }
     
     // Convert perspective coordinates back to world coordinates
     perspectiveToWorld(perspX, perspY) {
-        // Inverse of Y-axis foreshortening
-        return {
-            x: perspX,
-            y: perspY / Constants.PERSPECTIVE.Y_SCALE
-        };
+        // This is an approximation for mouse picking
+        // We need to solve for worldY first, then worldX
+        
+        // For mouse picking, we'll use an iterative approach
+        // Start with a guess based on screen position
+        let worldY = perspY / Constants.PERSPECTIVE.Y_SCALE;
+        
+        // Refine with a few iterations
+        for (let i = 0; i < 5; i++) {
+            const depth = Constants.PERSPECTIVE.CAMERA_DISTANCE + worldY;
+            const scale = Constants.PERSPECTIVE.CAMERA_DISTANCE / depth;
+            worldY = perspY / (Constants.PERSPECTIVE.Y_SCALE * scale);
+        }
+        
+        // Calculate worldX using the final scale
+        const depth = Constants.PERSPECTIVE.CAMERA_DISTANCE + worldY;
+        const scale = Constants.PERSPECTIVE.CAMERA_DISTANCE / depth;
+        const worldX = perspX / scale;
+        
+        return { x: worldX, y: worldY };
     }
     
     // Center camera on a target position
