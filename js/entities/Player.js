@@ -59,26 +59,21 @@ class Player {
     }
     
     // Convert tile path to waypoints (corners only) - SDK style
-    preprocessPathToWaypoints(tiles) {
-        if (tiles.length <= 1) return tiles;
+    preprocessPathToWaypoints(tiles, fromX, fromY) {
+        if (tiles.length === 0) return [];
         
         const waypoints = [];
         let lastDirection = null;
         
+        // Start from the position we're actually moving from
+        let prevX = fromX;
+        let prevY = fromY;
+        
         for (let i = 0; i < tiles.length; i++) {
-            let currentDirection;
-            
-            if (i === 0) {
-                // First tile - calculate direction from current position
-                const dx = tiles[i].x - this.tileX;
-                const dy = tiles[i].y - this.tileY;
-                currentDirection = `${Math.sign(dx)},${Math.sign(dy)}`;
-            } else {
-                // Calculate direction from previous tile
-                const dx = tiles[i].x - tiles[i-1].x;
-                const dy = tiles[i].y - tiles[i-1].y;
-                currentDirection = `${Math.sign(dx)},${Math.sign(dy)}`;
-            }
+            // Calculate direction from previous position
+            const dx = tiles[i].x - prevX;
+            const dy = tiles[i].y - prevY;
+            const currentDirection = `${Math.sign(dx)},${Math.sign(dy)}`;
             
             // Add waypoint if direction changed or it's the last tile
             if (currentDirection !== lastDirection || i === tiles.length - 1) {
@@ -90,6 +85,8 @@ class Player {
             }
             
             lastDirection = currentDirection;
+            prevX = tiles[i].x;
+            prevY = tiles[i].y;
         }
         
         return waypoints;
@@ -106,6 +103,10 @@ class Player {
             return false;
         }
         
+        // Store the position we're moving FROM (before updating)
+        const movingFromX = this.tileX;
+        const movingFromY = this.tileY;
+        
         // Determine movement speed based on run/walk state
         const speed = this.shouldRun() ? Constants.RUN_TILES_PER_MOVE : Constants.WALK_TILES_PER_MOVE;
         const tilesToMove = Math.min(speed, this.path.length);
@@ -117,8 +118,8 @@ class Player {
             tickTiles.push({ x: nextTile.x, y: nextTile.y });
         }
         
-        // Convert to waypoints (corner compression)
-        const newWaypoints = this.preprocessPathToWaypoints(tickTiles);
+        // Convert to waypoints using the position we're moving FROM
+        const newWaypoints = this.preprocessPathToWaypoints(tickTiles, movingFromX, movingFromY);
         
         // ADD to animation buffer (SDK style - don't replace!)
         this.animationWaypoints.push(...newWaypoints);
