@@ -15,11 +15,11 @@ class Player {
         
         // Pathfinding
         this.path = [];
-        this.fullPath = []; // NEW: Store complete path for reference
+        this.fullPath = []; // Store complete path for reference
         
         // Movement state
-        this.running = true; // NEW: Running state (default true like SDK)
-        this.forceWalk = false; // NEW: Temporary walk override
+        this.running = true; // Running state (default true like SDK)
+        this.forceWalk = false; // Temporary walk override for current path
         
         // Animation system (SDK-style)
         this.animationWaypoints = [];
@@ -163,6 +163,7 @@ class Player {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // SDK-STYLE DYNAMIC SPEED
+        // Determine base speed from run/walk state
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const ticksPerSecond = 1000 / Constants.TICK_RATE;
         const baseSpeed = tilesPerTick * ticksPerSecond;
