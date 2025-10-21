@@ -78,9 +78,9 @@ Fish (Partner skill to Cook) - Trained by catching fish from water sources
 
 Mine (Partner skill to Smith) - Trained by mining ore from rock sources
 
-Forestry (Partner skill to Craft) - Trained by chopping logs from tree sources
+Forage (Partner skill to Craft) - Trained by chopping logs from tree sources
 
-Forage (Partner skill to Divine) - Trained by gathering materials from field sources
+Attune (Partner skill to Divine) - Trained by gathering materials from magical sources
 
 
 
@@ -90,9 +90,9 @@ Cook (Partner skill to Fish) - Trained by consuming fish at the Kitchen
 
 Smith (Partner skill to Mine) - Trained by consuming ore at the Smithy
 
-Craft (Partner skill to Forestry) - Trained by crafting items from gathered materials at the Fletchery
+Craft (Partner skill to Forage) - Trained by crafting items from gathered materials at the Fletchery
 
-Divine (Partner skill to Forage) - Trained by consuming materials at the Apothecary
+Divine (Partner skill to Attune) - Trained by consuming magical materials at the Apothecary
 
 
 
@@ -108,13 +108,13 @@ Feats - Combat achievements completed increase feats
 
 
 **Shown in ui:**
-Combat row 1	Hitpoints	Melee Attack	Bow Attack	Magic Attack
+Combat row 1	Hitpoints	  Melee Attack	    Bow Attack	  Magic Attack
 
-Combat row 2	Focus		Melee Strength	Bow Strength	Magic Strength
+Combat row 2	Focus		    Melee Strength	  Bow Strength	Magic Strength
 
-Gathering	Mine		Fish		Woodcut		Forage
+Gathering	    Fish		    Mine		          Forage		    Attune
 
-Processing	Smith		Cook		Construct	Craft
+Processing	  Cook		    Smith		          Craft	        Divine
 
 Field		Athletics	Influence	Feats		???
 
