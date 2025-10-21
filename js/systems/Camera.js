@@ -109,7 +109,26 @@ class Camera {
     
     // Adjust zoom level
     adjustZoom(delta) {
+        // Store the old zoom level
+        const oldZoom = this.zoom;
+        
+        // Calculate what world position is currently at the center of the screen
+        const centerScreenX = this.viewportWidth / 2;
+        const centerScreenY = this.viewportHeight / 2;
+        const centerWorld = this.screenToWorld(centerScreenX, centerScreenY);
+        
+        // Update zoom (clamped to min/max)
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
+        
+        // If zoom actually changed, recalculate camera position to keep the same world point centered
+        if (this.zoom !== oldZoom) {
+            const zoomedWidth = this.viewportWidth / this.zoom;
+            const zoomedHeight = this.viewportHeight / this.zoom;
+            
+            // Set camera position so that centerWorld is still at the center of the screen
+            this.x = centerWorld.x - zoomedWidth / 2;
+            this.y = centerWorld.y - zoomedHeight / 2;
+        }
     }
     
     // Get current zoom level
