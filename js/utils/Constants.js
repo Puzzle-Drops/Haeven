@@ -18,7 +18,9 @@ const Constants = {
     
     // Movement settings
     MAX_TILES_PER_MOVE: 2,
-    PATHFINDING_LINE_CHECK: 5, // Max tiles to check along line for fallback
+    WALK_TILES_PER_MOVE: 1,
+    RUN_TILES_PER_MOVE: 2,
+    PATHFINDING_LINE_CHECK: 5,
     
     // Visual settings
     COLORS: {
