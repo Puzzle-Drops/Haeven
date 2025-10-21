@@ -54,7 +54,7 @@ Four categories of skills. Combat, Gathering, Processing, and Field. Combat skil
 
 **Combat Skills**
 
-Hitpoints - Maximum Health Pool - Trained by any combat
+Life - Maximum Health Pool - Trained by any combat
 
 Focus - Maximum Focus Pool - Trained by defeating enemies in combat
 
@@ -108,7 +108,7 @@ Feats - Combat achievements completed increase feats
 
 
 **Shown in ui:**
-Combat row 1	Hitpoints	  Melee Attack	    Bow Attack	  Magic Attack
+Combat row 1	Life    	  Melee Attack	    Bow Attack	  Magic Attack
 
 Combat row 2	Focus		    Melee Strength	  Bow Strength	Magic Strength
 
