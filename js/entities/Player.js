@@ -163,17 +163,19 @@ class Player {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // SDK-STYLE DYNAMIC SPEED
-        // Determine base speed from run/walk state
+        // Base speed calculation - this should be tiles per SECOND, not per tick!
+        // Running: 2 tiles per 600ms = 3.33 tiles/second
+        // Walking: 1 tile per 600ms = 1.67 tiles/second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
-        const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond;
+        const ticksPerSecond = 1000 / Constants.TICK_RATE; // 1.67 ticks/second
+        const baseSpeed = tilesPerTick * ticksPerSecond; // 3.33 or 1.67 tiles/second
         
         // Dynamic speed adjustment based on buffer size (SDK style)
         let speedMultiplier = 1;
         const bufferSize = this.animationWaypoints.length;
         
         if (bufferSize >= 4) {
-            // Way behind - catch up fast
+            // Way behind - catch up fast (double speed)
             speedMultiplier = 2;
         } else if (bufferSize >= 3) {
             // Falling behind - speed up
@@ -183,14 +185,20 @@ class Player {
             speedMultiplier = 0.9;
         }
         
-        // Account for diagonal movement
+        // For diagonal movement, we need to move at sqrt(2) speed to cover the distance
+        // in the same time as orthogonal movement
         const isOrthogonal = (dx === 0 || dy === 0);
         const distanceAdjustment = isOrthogonal ? 1 : Math.sqrt(2);
+        
+        // Calculate actual speed in tiles per second
         const actualSpeed = baseSpeed * speedMultiplier * distanceAdjustment;
         
-        // Update segment progress
+        // Update segment progress based on speed and time
+        // Progress is the fraction of the segment completed this frame
         if (distance > 0) {
-            this.segmentProgress += (actualSpeed * deltaTime) / 1000 / distance;
+            // actualSpeed is in tiles/second, deltaTime is in milliseconds
+            // distance is in tiles, so (actualSpeed * deltaTime / 1000) / distance gives us the fraction
+            this.segmentProgress += (actualSpeed * deltaTime / 1000) / distance;
         } else {
             this.segmentProgress = 1;
         }
