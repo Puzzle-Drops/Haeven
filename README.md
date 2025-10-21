@@ -59,8 +59,8 @@ Four categories of skills. Combat, Gathering, Processing, and Field. Combat skil
 
 ### Shown in UI:
 ```
-Combat 1    Life        Strike      Aim         Cast
-Combat 2    Focus       Swing       Draw        Surge
+Combat 1        Life        Strike      Aim         Cast
+Combat 2        Focus       Swing       Draw        Surge
 Gathering       Fish        Mine        Forage      Attune
 Processing      Cook        Smith       Craft       Divine
 Field           Vigour      Hunt        Influence   Feats
