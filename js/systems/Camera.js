@@ -84,10 +84,13 @@ class Camera {
     
     // Check if a world position is visible
     isVisible(worldX, worldY, margin = 0) {
+        const zoomedWidth = this.viewportWidth / this.zoom;
+        const zoomedHeight = this.viewportHeight / this.zoom;
+        
         return worldX >= this.x - margin &&
-               worldX <= this.x + this.viewportWidth + margin &&
+               worldX <= this.x + zoomedWidth + margin &&
                worldY >= this.y - margin &&
-               worldY <= this.y + this.viewportHeight + margin;
+               worldY <= this.y + zoomedHeight + margin;
     }
     
     // Set camera bounds (kept for API compatibility but doesn't clamp)
@@ -112,5 +115,10 @@ class Camera {
     // Get current zoom level
     getZoom() {
         return this.zoom;
+    }
+    
+    // Get the effective tile size based on zoom
+    getEffectiveTileSize() {
+        return Constants.TILE_SIZE * this.zoom;
     }
 }
