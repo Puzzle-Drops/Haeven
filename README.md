@@ -96,23 +96,23 @@ Four categories of skills: Combat, Gathering, Processing, and Field. All skills 
 - **Life** - Maximum Health Pool - Trained by any combat
 - **Spirit** - Maximum Focus Pool - Trained by defeating enemies
 - **Strike** - Melee accuracy roll - Trained by melee combat
-- **Drive** - Melee strength roll - Trained by melee combat
-- **Aim** - Bow accuracy roll - Trained by bow combat
-- **Draw** - Bow strength roll - Trained by bow combat
-- **Cast** - Magic accuracy roll - Trained by magic combat
-- **Surge** - Magic strength roll - Trained by magic combat
+- **Cleave** - Melee strength roll - Trained by melee combat
+- **Mark** - Bow accuracy roll - Trained by bow combat
+- **Loose** - Bow strength roll - Trained by bow combat
+- **Weave** - Magic accuracy roll - Trained by magic combat
+- **Channel** - Magic strength roll - Trained by magic combat
 
 ### Gathering Skills
 - **Fish** (Partner skill to Cook) - Trained by catching fish from water sources
 - **Mine** (Partner skill to Smith) - Trained by mining ore from rock sources
 - **Forage** (Partner skill to Craft) - Trained by chopping logs from tree sources
-- **Attune** (Partner skill to Divine) - Trained by gathering materials from magical sources
+- **Divine** (Partner skill to Attune) - Trained by gathering materials from magical sources
 
 ### Processing Skills
 - **Cook** (Partner skill to Fish) - Trained by consuming fish at the Kitchen
 - **Smith** (Partner skill to Mine) - Trained by consuming ore at the Smithy
 - **Craft** (Partner skill to Forage) - Trained by crafting items at the Fletchery
-- **Divine** (Partner skill to Attune) - Trained by consuming magical materials at the Apothecary
+- **Attune** (Partner skill to Divine) - Trained by consuming magical materials at the Apothecary
 
 ### Field Skills
 - **Vigour** - Affects run energy regeneration
@@ -122,10 +122,10 @@ Four categories of skills: Combat, Gathering, Processing, and Field. All skills 
 
 ### Skills UI Layout:
 ```
-Combat 1    Life        Strike      Aim         Cast
-Combat 2    Spirit      Drive       Draw        Surge
-Gathering   Fish        Mine        Forage      Attune
-Processing  Cook        Smith       Craft       Divine
+Combat 1    Life        Strike      Mark        Weave
+Combat 2    Spirit      Cleave      Loose       Channel
+Gathering   Fish        Mine        Forage      Divine
+Processing  Cook        Smith       Craft       Attune
 Field       Vigour      Hunt        Renown      Glory
 ```
 
@@ -155,9 +155,9 @@ Field       Vigour      Hunt        Renown      Glory
 
 ### Combat Training
 Each weapon type has three training options:
-- **Focused:** 100% XP to primary skill (Strike for melee, Aim for ranged, Cast for magic)
+- **Focused:** 100% XP to primary skill (Strike for melee, Mark for ranged, Weave for magic)
 - **Balanced:** 50/50 split between accuracy and power skills
-- **Aggressive:** 100% XP to power skill (Drive for melee, Draw for ranged, Surge for magic)
+- **Aggressive:** 100% XP to power skill (Cleave for melee, Loose for ranged, Channel for magic)
 
 ### Gathering Training
 - **Harvest:** 10% XP, 2x resources (profit mode)
@@ -178,8 +178,8 @@ Shows three training options for the current skill or equipped weapon's combat s
 
 **Melee Combat Options:**
 - **Controlled** (all combat XP to Strike)
-- **Balanced** (50% to Strike, 50% to Might)
-- **Aggressive** (all combat XP to Might)
+- **Balanced** (50% to Strike, 50% to Cleave)
+- **Aggressive** (all combat XP to Cleave)
 
 **Non-Combat Skill Options:**
 - **Harvest** (10% XP, double resources)
@@ -208,7 +208,7 @@ Zachary's Zombie Problem            57
 ```
 
 ### Bag Panel
-- Shows current items in a 5x8 grid (max 20 items)
+- Shows current items in a 4x8 grid (max 32 items)
 - Click weapon/equipment to equip (swaps with currently equipped)
 - Click food to eat (restores health)
 - Changes occur on the next game tick
@@ -253,14 +253,14 @@ Each gathering skill follows the same progression:
 - Level 100: Legendary Fish → Cooked Fish (45-50 HP, 3-tick delay)
 
 **Secondary Resource - Seaweed:**
-- Tier 1 (Levels 1-20): Rough Seaweed → Seaweed (R)
-- Tier 2 (Levels 21-40): Common Seaweed → Seaweed (R)
-- Tier 3 (Levels 41-60): Quality Seaweed → Seaweed (R)
-- Tier 4 (Levels 61-80): Pure Seaweed → Seaweed (R)
-- Tier 5 (Levels 81-100): Perfect Seaweed → Seaweed (R)
-- **Spirit Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) for 5 minutes
+- Tier 1 (Levels 1-20): Flawed Seaweed → Flawed Seaweed (R)
+- Tier 2 (Levels 21-40): Common Seaweed → Common Seaweed (R)
+- Tier 3 (Levels 41-60): Quality Seaweed → Quality Seaweed (R)
+- Tier 4 (Levels 61-80): Pure Seaweed → Pure Seaweed (R)
+- Tier 5 (Levels 81-100): Perfect Seaweed → Perfect Seaweed (R)
+- **Spirit Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20)
 
-**Combo Eating:** Can consume 1 main food + 1 squid per tick
+**Combo Eating:** Can consume 1 main food + 1 squid + 1 potion per tick
 **Eat Delay:** 3 ticks between eating attempts
 
 ### Mine → Smith
@@ -278,12 +278,12 @@ Each gathering skill follows the same progression:
 - Level 100: Primordial Ore
 
 **Secondary Resource - Flint:**
-- Tier 1 (Levels 1-20): Flawed Flint → Flint (R)
-- Tier 2 (Levels 21-40): Common Flint → Flint (R)
-- Tier 3 (Levels 41-60): Quality Flint → Flint (R)
-- Tier 4 (Levels 61-80): Pure Flint → Flint (R)
-- Tier 5 (Levels 81-100): Perfect Flint → Flint (R)
-- **Melee Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Strike/Might for 5 minutes
+- Tier 1 (Levels 1-20): Flawed Flint → Flawed Flint (R)
+- Tier 2 (Levels 21-40): Common Flint → Common Flint (R)
+- Tier 3 (Levels 41-60): Quality Flint → Quality Flint (R)
+- Tier 4 (Levels 61-80): Pure Flint → Pure Flint (R)
+- Tier 5 (Levels 81-100): Perfect Flint → Perfect Flint (R)
+- **Melee Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Strike/Cleave for 5 minutes
 
 ### Forage → Craft
 **Primary Resources (Every 10 levels):**
@@ -294,20 +294,20 @@ Each gathering skill follows the same progression:
 - Level 40: Magic Logs
 - Level 50: Redwood Logs
 - Level 60: Ancient Logs
-- Level 70: Spirit Logs
+- Level 70: Spectral Logs
 - Level 80: Elder Logs
 - Level 90: Sacred Logs
 - Level 100: World Logs
 
 **Secondary Resource - Resin:**
-- Tier 1 (Levels 1-20): Sticky Resin → Resin (R)
-- Tier 2 (Levels 21-40): Common Resin → Resin (R)
-- Tier 3 (Levels 41-60): Clear Resin → Resin (R)
-- Tier 4 (Levels 61-80): Pure Resin → Resin (R)
-- Tier 5 (Levels 81-100): Perfect Resin → Resin (R)
-- **Ranged Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Aim/Draw for 5 minutes
+- Tier 1 (Levels 1-20): Flawed Resin → Flawed Resin (R)
+- Tier 2 (Levels 21-40): Common Resin → Common Resin (R)
+- Tier 3 (Levels 41-60): Quality Resin → Quality Resin (R)
+- Tier 4 (Levels 61-80): Pure Resin → Pure Resin (R)
+- Tier 5 (Levels 81-100): Perfect Resin → Perfect Resin (R)
+- **Ranged Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Mark/Loose for 5 minutes
 
-### Attune → Divine
+### Divine → Attune
 **Primary Resources (Every 10 levels):**
 - Level 1: Faint Essence
 - Level 10: Dim Essence
@@ -322,24 +322,24 @@ Each gathering skill follows the same progression:
 - Level 100: Divine Essence
 
 **Secondary Resource - Dust:**
-- Tier 1 (Levels 1-20): Coarse Dust → Dust (R)
-- Tier 2 (Levels 21-40): Fine Dust → Dust (R)
-- Tier 3 (Levels 41-60): Refined Dust → Dust (R)
-- Tier 4 (Levels 61-80): Pure Dust → Dust (R)
-- Tier 5 (Levels 81-100): Perfect Dust → Dust (R)
-- **Magic Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Cast/Surge for 5 minutes
+- Tier 1 (Levels 1-20): Flawed Dust → Flawed Dust (R)
+- Tier 2 (Levels 21-40): Common Dust → Common Dust (R)
+- Tier 3 (Levels 41-60): Quality Dust → Quality Dust (R)
+- Tier 4 (Levels 61-80): Pure Dust → Pure Dust (R)
+- Tier 5 (Levels 81-100): Perfect Dust → Perfect Dust (R)
+- **Magic Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Weave/Channel for 5 minutes
 
 ## Processing Locations
 - **Cook:** Kitchen
 - **Smith:** Smithy
 - **Craft:** Fletchery
-- **Divine:** Altar (new location for Divine processing)
-- **Potion Creation:** Apothecary (combines refined secondary resources into potions)
+- **Attune:** Sanctum
+- **Potion Creation:** Apothecary (converts refined secondary resources into potions)
 
 ## Weapon Degradation System
 - **Uncharged equipment:** Functions at 75% effectiveness
 - **Charging requirements:**
   - Melee weapons: Require ore from Mining/Smithing
   - Ranged weapons: Require logs from Foraging/Crafting
-  - Magic weapons: Require essence from Attuning/Divining
+  - Magic weapons: Require essence from Divining/Attuning
 - Degradation encourages engagement with all gathering/processing skills
