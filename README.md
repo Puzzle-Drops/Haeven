@@ -240,17 +240,17 @@ Each gathering skill follows the same progression:
 
 ### Fish → Cook
 **Primary Resources:**
-- Level 1-9: Basic Fish → Cooked Fish (10-15 HP, 3-tick delay)
-- Level 10-19: Common Fish → Cooked Fish (15-20 HP, 3-tick delay)
-- Level 20-29: **Squid** → Cooked Squid (5-10 HP, 1-tick delay)
-- Level 30-39: Quality Fish → Cooked Fish (20-25 HP, 3-tick delay)
-- Level 40-49: Fine Fish → Cooked Fish (25-30 HP, 3-tick delay)
-- Level 50-59: **Squid** → Superior Squid (10-15 HP, 1-tick delay)
-- Level 60-69: Great Fish → Cooked Fish (30-35 HP, 3-tick delay)
-- Level 70-79: Superior Fish → Cooked Fish (35-40 HP, 3-tick delay)
-- Level 80-89: **Squid** → Master Squid (15-20 HP, 1-tick delay)
-- Level 90-99: Master Fish → Cooked Fish (40-45 HP, 3-tick delay)
-- Level 100: Legendary Fish → Cooked Fish (45-50 HP, 3-tick delay)
+- Level 1-9: Raw Minnow → Minnow (3 HP, 3-tick delay)
+- Level 10-19: Raw Brookfin → Brookfin (6 HP, 3-tick delay)
+- Level 20-29: Raw Inkblot Squid → Inkblot Squid (5 HP, 1-tick delay)
+- Level 30-39: Raw Koi → Koi (9 HP, 3-tick delay)
+- Level 40-49: Raw Pikelet → Pikelet (12 HP, 3-tick delay)
+- Level 50-59: Raw Glowcap Squid → Glowcap Squid (10 HP, 1-tick delay)
+- Level 60-69: Raw Carp → Carp (15 HP, 3-tick delay)
+- Level 70-79: Raw Eel → Eel (18 HP, 3-tick delay)
+- Level 80-89: Raw Starlace Squid → Starlace Squid (15 HP, 1-tick delay)
+- Level 90-99: Raw Moonshark → Moonshark (21 HP, 3-tick delay)
+- Level 100: Raw Lilviathan → Lilviathan (24 HP, 3-tick delay)
 
 **Secondary Resource - Seaweed:**
 - Tier 1 (Levels 1-20): Flawed Seaweed → Flawed Seaweed (R)
@@ -265,17 +265,17 @@ Each gathering skill follows the same progression:
 
 ### Mine → Smith
 **Primary Resources (Every 10 levels):**
-- Level 1: Copper Ore
-- Level 10: Iron Ore
-- Level 20: Steel Ore
-- Level 30: Mithril Ore
-- Level 40: Adamant Ore
-- Level 50: Rune Ore
-- Level 60: Dragon Ore
-- Level 70: Crystal Ore
-- Level 80: Void Ore
-- Level 90: Ethereal Ore
-- Level 100: Primordial Ore
+- Level 1: Pebblestone Ore
+- Level 10: Tinleaf Ore
+- Level 20: Bronzewood Ore
+- Level 30: Ironbloom Ore
+- Level 40: Silverroot Ore
+- Level 50: Goldveil Ore
+- Level 60: Sunsteel Ore
+- Level 70: Runestone Ore
+- Level 80: Aetherite Ore
+- Level 90: Starforged Ore
+- Level 100: Primora Ore
 
 **Secondary Resource - Flint:**
 - Tier 1 (Levels 1-20): Flawed Flint → Flawed Flint (R)
@@ -287,14 +287,14 @@ Each gathering skill follows the same progression:
 
 ### Forage → Craft
 **Primary Resources (Every 10 levels):**
-- Level 1: Oak Logs
-- Level 10: Willow Logs
-- Level 20: Maple Logs
-- Level 30: Yew Logs
-- Level 40: Magic Logs
-- Level 50: Redwood Logs
-- Level 60: Ancient Logs
-- Level 70: Spectral Logs
+- Level 1: Birch Logs
+- Level 10: Oak Logs
+- Level 20: Willow Logs
+- Level 30: Maple Logs
+- Level 40: Ashen Logs
+- Level 50: Yew Logs
+- Level 60: Redwood Logs
+- Level 70: Ancient Logs
 - Level 80: Elder Logs
 - Level 90: Sacred Logs
 - Level 100: World Logs
@@ -310,14 +310,14 @@ Each gathering skill follows the same progression:
 ### Divine → Attune
 **Primary Resources (Every 10 levels):**
 - Level 1: Faint Essence
-- Level 10: Dim Essence
-- Level 20: Common Essence
+- Level 10: Glimmer Essence
+- Level 20: Kindle Essence
 - Level 30: Bright Essence
-- Level 40: Strong Essence
-- Level 50: Potent Essence
-- Level 60: Radiant Essence
-- Level 70: Pure Essence
-- Level 80: Ancient Essence
+- Level 40: Shimmer Essence
+- Level 50: Radiant Essence
+- Level 60: Auric Essence
+- Level 70: Starlit Essence
+- Level 80: Aether Essence
 - Level 90: Celestial Essence
 - Level 100: Divine Essence
 
