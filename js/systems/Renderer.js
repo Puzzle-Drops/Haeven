@@ -62,13 +62,13 @@ class Renderer {
         const bottomLeft = { x: tile.x * tileSize, y: (tile.y + 1) * tileSize };
         const bottomRight = { x: (tile.x + 1) * tileSize, y: (tile.y + 1) * tileSize };
         
-        // Convert to screen space (with Y-axis foreshortening)
+        // Convert to screen space (with perspective scaling)
         const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
         const screenTR = camera.worldToScreen(topRight.x, topRight.y);
         const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
         const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
         
-        // Draw tile as a rectangle (foreshortened on Y-axis)
+        // Draw tile as a trapezoid
         this.ctx.fillStyle = tile.getDisplayColor();
         this.ctx.beginPath();
         this.ctx.moveTo(screenTL.x, screenTL.y);
@@ -145,23 +145,27 @@ class Renderer {
         this.ctx.stroke();
     }
     
-    // Render the player as a vertical circle (Paper Mario style)
+    // Render the player as a vertical circle (Paper Mario style) with perspective scaling
     renderPlayer(player, camera) {
         const worldPos = player.getWorldPosition();
         
-        // Get the base position on the ground (foreshortened)
+        // Get the base position on the ground with perspective
         const baseScreen = camera.worldToScreen(worldPos.x, worldPos.y);
         
-        // Offset upward to make player appear vertical/standing
-        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom;
-        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom;
+        // Calculate perspective scale for this Y position
+        const normalizedY = worldPos.y / (Constants.WORLD_HEIGHT * Constants.TILE_SIZE);
+        const perspectiveScale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
+        
+        // Apply perspective scale to player dimensions
+        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom * perspectiveScale;
+        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom * perspectiveScale;
         
         const playerScreen = {
             x: baseScreen.x,
             y: baseScreen.y - playerHeight + yOffset
         };
         
-        const radius = player.radius * camera.zoom;
+        const radius = player.radius * camera.zoom * perspectiveScale;
         
         // Draw shadow on the ground first (ellipse for depth)
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
