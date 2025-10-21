@@ -12,6 +12,12 @@ class Camera {
         this.smoothing = true;
         this.smoothingSpeed = 0.1; // lerp factor
         
+        // Zoom controls
+        this.zoom = 1.0; // Default zoom level (1.0 = normal)
+        this.minZoom = 0.5; // Maximum zoom out (see more of the world)
+        this.maxZoom = 2.0; // Maximum zoom in (closer view)
+        this.zoomSpeed = 0.001; // How fast zoom responds to scroll
+        
         // World dimensions (kept for reference but not used for clamping)
         this.worldWidth = Constants.WORLD_WIDTH * Constants.TILE_SIZE;
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
@@ -19,8 +25,12 @@ class Camera {
     
     // Center camera on a target position
     centerOn(targetX, targetY) {
-        const newX = targetX - this.viewportWidth / 2;
-        const newY = targetY - this.viewportHeight / 2;
+        // Account for zoom when centering
+        const zoomedWidth = this.viewportWidth / this.zoom;
+        const zoomedHeight = this.viewportHeight / this.zoom;
+        
+        const newX = targetX - zoomedWidth / 2;
+        const newY = targetY - zoomedHeight / 2;
         
         // Always use smooth camera movement
         this.x = this.x + (newX - this.x) * this.smoothingSpeed;
@@ -37,10 +47,14 @@ class Camera {
     
     // Get visible tile range
     getVisibleTiles() {
+        // Account for zoom when calculating visible tiles
+        const zoomedWidth = this.viewportWidth / this.zoom;
+        const zoomedHeight = this.viewportHeight / this.zoom;
+        
         const startTileX = Math.floor(this.x / Constants.TILE_SIZE);
         const startTileY = Math.floor(this.y / Constants.TILE_SIZE);
-        const endTileX = Math.ceil((this.x + this.viewportWidth) / Constants.TILE_SIZE);
-        const endTileY = Math.ceil((this.y + this.viewportHeight) / Constants.TILE_SIZE);
+        const endTileX = Math.ceil((this.x + zoomedWidth) / Constants.TILE_SIZE);
+        const endTileY = Math.ceil((this.y + zoomedHeight) / Constants.TILE_SIZE);
         
         // Still clamp the tile range for rendering efficiency
         // But camera position itself is not clamped
@@ -55,16 +69,16 @@ class Camera {
     // Convert world coordinates to screen coordinates
     worldToScreen(worldX, worldY) {
         return {
-            x: worldX - this.x,
-            y: worldY - this.y
+            x: (worldX - this.x) * this.zoom,
+            y: (worldY - this.y) * this.zoom
         };
     }
     
     // Convert screen coordinates to world coordinates
     screenToWorld(screenX, screenY) {
         return {
-            x: screenX + this.x,
-            y: screenY + this.y
+            x: screenX / this.zoom + this.x,
+            y: screenY / this.zoom + this.y
         };
     }
     
@@ -88,5 +102,15 @@ class Camera {
     setSmoothingEnabled(enabled, speed = 0.1) {
         this.smoothing = enabled;
         this.smoothingSpeed = speed;
+    }
+    
+    // Adjust zoom level
+    adjustZoom(delta) {
+        this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
+    }
+    
+    // Get current zoom level
+    getZoom() {
+        return this.zoom;
     }
 }
