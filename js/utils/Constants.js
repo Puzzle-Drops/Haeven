@@ -11,12 +11,11 @@ const Constants = {
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
     
-    // Isometric settings
-    ISOMETRIC: {
-        ANGLE: 30, // degrees - viewing angle (30 = ~2:1 ratio isometric)
-        TILE_HEIGHT: 64, // visual height of isometric tile in pixels
-        PLAYER_HEIGHT: 128, // how tall the vertical player sprite appears
-        PLAYER_Y_OFFSET: 32 // offset to position player correctly on tile
+    // Perspective settings (45-degree pitch)
+    PERSPECTIVE: {
+        Y_SCALE: 0.707, // cos(45°) - foreshortening factor for Y-axis
+        PLAYER_HEIGHT: 100, // how tall the vertical player sprite appears
+        PLAYER_Y_OFFSET: 20 // offset to position player correctly on tile
     },
     
     // Timing settings
