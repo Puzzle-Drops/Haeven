@@ -1,7 +1,7 @@
 # Haeven Game Documentation
 
 ## Identity
-Cozy world built around villages just trying to survive a magical land of mayhem. As a fledgling adventurer you have skills consisting of combat, gathering, processing, and field. The tile-based world provides ways to train these skills and help the surrounding villagers. The game will have AFK skills, active combat, and allow for vertical and horizontal progression. The game is played in a 2D tile-based environment.
+Cozy world built around villages just trying to survive a magical land of mayhem. As a fledgling adventurer you have skills consisting of combat, gathering, processing, and field. The tile-based world provides ways to train these skills and help the surrounding villagers. The game will have AFK skills, active combat, and allow for vertical and horizontal progression. The game is played in a 2D tile-based environment. Haeven balances rustic village life with lighthearted fantasy—a world where simple trades coexist with quiet magic.
 
 ## Display
 - **Resolution:** 2560x1440 (16:9) internally rendered
@@ -70,7 +70,7 @@ The world map consists of tiles. A tile's properties are:
 ### Run Energy
 - Maximum: 10,000 (displays as 100%)
 - Depletion rate varies by weight carried (67-134 per tile while running)
-- Stamina potions reduce consumption to 30%
+- Vigour potions reduce consumption to 30%
 - Regenerates 8 + (Vigour/6) per tick while walking
 
 ## Input
