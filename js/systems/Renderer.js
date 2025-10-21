@@ -52,7 +52,7 @@ class Renderer {
         }
     }
     
-    // Render a single tile with perspective projection
+    // Render a single tile with true perspective projection (trapezoid)
     renderTile(tile, camera, hoveredTile) {
         const tileSize = Constants.TILE_SIZE;
         
@@ -62,13 +62,31 @@ class Renderer {
         const bottomLeft = { x: tile.x * tileSize, y: (tile.y + 1) * tileSize };
         const bottomRight = { x: (tile.x + 1) * tileSize, y: (tile.y + 1) * tileSize };
         
-        // Convert to screen space (with Y-axis foreshortening)
-        const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
-        const screenTR = camera.worldToScreen(topRight.x, topRight.y);
-        const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
-        const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
+        // Convert each corner independently to get trapezoid effect
+        const perspTL = camera.worldToPerspective(topLeft.x, topLeft.y);
+        const perspTR = camera.worldToPerspective(topRight.x, topRight.y);
+        const perspBL = camera.worldToPerspective(bottomLeft.x, bottomLeft.y);
+        const perspBR = camera.worldToPerspective(bottomRight.x, bottomRight.y);
         
-        // Draw tile as a rectangle (foreshortened on Y-axis)
+        // Convert to screen space
+        const screenTL = {
+            x: (perspTL.x - camera.x) * camera.zoom,
+            y: (perspTL.y - camera.y) * camera.zoom
+        };
+        const screenTR = {
+            x: (perspTR.x - camera.x) * camera.zoom,
+            y: (perspTR.y - camera.y) * camera.zoom
+        };
+        const screenBL = {
+            x: (perspBL.x - camera.x) * camera.zoom,
+            y: (perspBL.y - camera.y) * camera.zoom
+        };
+        const screenBR = {
+            x: (perspBR.x - camera.x) * camera.zoom,
+            y: (perspBR.y - camera.y) * camera.zoom
+        };
+        
+        // Draw tile as a trapezoid (perspective-correct)
         this.ctx.fillStyle = tile.getDisplayColor();
         this.ctx.beginPath();
         this.ctx.moveTo(screenTL.x, screenTL.y);
@@ -117,7 +135,7 @@ class Renderer {
         }
     }
     
-    // Render a tile highlight border with perspective
+    // Render a tile highlight border with true perspective
     renderTileHighlight(tileX, tileY, color, camera) {
         const tileSize = Constants.TILE_SIZE;
         
@@ -127,11 +145,29 @@ class Renderer {
         const bottomLeft = { x: tileX * tileSize, y: (tileY + 1) * tileSize };
         const bottomRight = { x: (tileX + 1) * tileSize, y: (tileY + 1) * tileSize };
         
+        // Convert each corner independently
+        const perspTL = camera.worldToPerspective(topLeft.x, topLeft.y);
+        const perspTR = camera.worldToPerspective(topRight.x, topRight.y);
+        const perspBL = camera.worldToPerspective(bottomLeft.x, bottomLeft.y);
+        const perspBR = camera.worldToPerspective(bottomRight.x, bottomRight.y);
+        
         // Convert to screen space
-        const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
-        const screenTR = camera.worldToScreen(topRight.x, topRight.y);
-        const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
-        const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
+        const screenTL = {
+            x: (perspTL.x - camera.x) * camera.zoom,
+            y: (perspTL.y - camera.y) * camera.zoom
+        };
+        const screenTR = {
+            x: (perspTR.x - camera.x) * camera.zoom,
+            y: (perspTR.y - camera.y) * camera.zoom
+        };
+        const screenBL = {
+            x: (perspBL.x - camera.x) * camera.zoom,
+            y: (perspBL.y - camera.y) * camera.zoom
+        };
+        const screenBR = {
+            x: (perspBR.x - camera.x) * camera.zoom,
+            y: (perspBR.y - camera.y) * camera.zoom
+        };
         
         // Draw highlight border
         this.ctx.strokeStyle = color;
@@ -145,23 +181,32 @@ class Renderer {
         this.ctx.stroke();
     }
     
-    // Render the player as a vertical circle (Paper Mario style)
+    // Render the player as a vertical circle with perspective scaling
     renderPlayer(player, camera) {
         const worldPos = player.getWorldPosition();
         
-        // Get the base position on the ground (foreshortened)
-        const baseScreen = camera.worldToScreen(worldPos.x, worldPos.y);
+        // Get perspective transformation for base position
+        const basePersp = camera.worldToPerspective(worldPos.x, worldPos.y);
+        
+        // Convert to screen space
+        const baseScreen = {
+            x: (basePersp.x - camera.x) * camera.zoom,
+            y: (basePersp.y - camera.y) * camera.zoom
+        };
+        
+        // Apply perspective scaling to player size
+        const perspectiveScale = basePersp.scale;
         
         // Offset upward to make player appear vertical/standing
-        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom;
-        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom;
+        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom * perspectiveScale;
+        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom * perspectiveScale;
         
         const playerScreen = {
             x: baseScreen.x,
             y: baseScreen.y - playerHeight + yOffset
         };
         
-        const radius = player.radius * camera.zoom;
+        const radius = player.radius * camera.zoom * perspectiveScale;
         
         // Draw shadow on the ground first (ellipse for depth)
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -191,11 +236,11 @@ class Renderer {
         
         // Draw player outline
         this.ctx.strokeStyle = player.outlineColor;
-        this.ctx.lineWidth = 2;
+        this.ctx.lineWidth = 2 * perspectiveScale;
         this.ctx.stroke();
     }
     
-    // Render the path (for debugging)
+    // Render the path (for debugging) with perspective
     renderPath(path, camera) {
         if (!path || path.length === 0) return;
         
@@ -207,7 +252,12 @@ class Renderer {
         for (let i = 0; i < path.length; i++) {
             const worldX = path[i].x * Constants.TILE_SIZE + Constants.TILE_SIZE / 2;
             const worldY = path[i].y * Constants.TILE_SIZE + Constants.TILE_SIZE / 2;
-            const screenPos = camera.worldToScreen(worldX, worldY);
+            
+            const persp = camera.worldToPerspective(worldX, worldY);
+            const screenPos = {
+                x: (persp.x - camera.x) * camera.zoom,
+                y: (persp.y - camera.y) * camera.zoom
+            };
             
             if (i === 0) {
                 this.ctx.moveTo(screenPos.x, screenPos.y);
