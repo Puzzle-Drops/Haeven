@@ -150,54 +150,39 @@ class Player {
             return false;
         }
         
+        // Store position before movement
+        const startX = this.tileX;
+        const startY = this.tileY;
+        
         // Determine movement speed based on run/walk state
         const speed = this.shouldRun() ? Constants.RUN_TILES_PER_MOVE : Constants.WALK_TILES_PER_MOVE;
         const tilesToMove = Math.min(speed, this.path.length);
         
-        // Move through tiles
+        // Collect tiles we're moving through this tick
+        const tickTiles = [];
         for (let i = 0; i < tilesToMove; i++) {
             const nextTile = this.path.shift();
-            this.tileX = nextTile.x;
-            this.tileY = nextTile.y;
+            tickTiles.push({ x: nextTile.x, y: nextTile.y });
         }
         
-        // Check if we've reached or passed any waypoints
-        // Add them to the animation buffer as we reach them
-        while (this.waypointIndex < this.plannedWaypoints.length) {
-            const nextWaypoint = this.plannedWaypoints[this.waypointIndex];
-            
-            // Check if we've reached this waypoint's position
-            const tilesProcessed = this.fullPath.length - this.path.length;
-            if (tilesProcessed > nextWaypoint.tileIndex) {
-                // We've passed this waypoint, add it to animation buffer
-                this.animationWaypoints.push({
-                    x: nextWaypoint.x,
-                    y: nextWaypoint.y,
-                    run: nextWaypoint.run
-                });
-                this.waypointIndex++;
-            } else {
-                // Haven't reached this waypoint yet
-                break;
-            }
+        // Convert these tiles to waypoints (looking for direction changes)
+        const newWaypoints = this.preprocessPathToWaypoints(tickTiles, startX, startY);
+        
+        // Add new waypoints to animation buffer
+        this.animationWaypoints.push(...newWaypoints);
+        
+        // Update logical position
+        if (tickTiles.length > 0) {
+            const lastTile = tickTiles[tickTiles.length - 1];
+            this.tileX = lastTile.x;
+            this.tileY = lastTile.y;
         }
         
         // Update target if path is complete
         if (this.path.length === 0) {
             this.targetX = this.tileX;
             this.targetY = this.tileY;
-            this.forceWalk = false; // Reset walk override when path complete
-            
-            // Make sure the final waypoint is added
-            if (this.waypointIndex < this.plannedWaypoints.length) {
-                const finalWaypoint = this.plannedWaypoints[this.plannedWaypoints.length - 1];
-                this.animationWaypoints.push({
-                    x: finalWaypoint.x,
-                    y: finalWaypoint.y,
-                    run: finalWaypoint.run
-                });
-                this.waypointIndex = this.plannedWaypoints.length;
-            }
+            this.forceWalk = false;
         }
         
         return true;
