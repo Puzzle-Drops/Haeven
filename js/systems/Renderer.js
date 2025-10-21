@@ -11,7 +11,7 @@ class Renderer {
         // Disable image smoothing for pixel-perfect rendering
         this.ctx.imageSmoothingEnabled = false;
         
-        // Render layers (for future expansion)
+        // Render layers
         this.layers = {
             background: 0,
             terrain: 1,
@@ -27,69 +27,88 @@ class Renderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
-    // Render the game world
+    // Render the game world with isometric projection
     renderWorld(world, camera, hoveredTile = null) {
         const visible = camera.getVisibleTiles();
-        const tileSize = camera.getEffectiveTileSize();
         
+        // Collect all tiles that need rendering
+        const tilesToRender = [];
         for (let y = visible.startY; y < visible.endY; y++) {
             for (let x = visible.startX; x < visible.endX; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
-                    this.renderTile(tile, camera, hoveredTile, tileSize);
+                    tilesToRender.push(tile);
                 }
             }
         }
+        
+        // Sort tiles for proper isometric drawing order (back to front)
+        // In isometric, tiles with smaller (x + y) are further back
+        tilesToRender.sort((a, b) => {
+            const sumA = a.x + a.y;
+            const sumB = b.x + b.y;
+            return sumA - sumB;
+        });
+        
+        // Render sorted tiles
+        for (const tile of tilesToRender) {
+            this.renderTile(tile, camera, hoveredTile);
+        }
     }
     
-    // Render a single tile
-    renderTile(tile, camera, hoveredTile, tileSize) {
-        const worldX = tile.x * Constants.TILE_SIZE;
-        const worldY = tile.y * Constants.TILE_SIZE;
-        const screenPos = camera.worldToScreen(worldX, worldY);
+    // Render a single tile in isometric projection
+    renderTile(tile, camera, hoveredTile) {
+        const tileSize = Constants.TILE_SIZE;
+        const tileHeight = Constants.ISOMETRIC.TILE_HEIGHT;
         
-        // Draw tile background
+        // Get the four corners of the tile in world space
+        const topLeft = { x: tile.x * tileSize, y: tile.y * tileSize };
+        const topRight = { x: (tile.x + 1) * tileSize, y: tile.y * tileSize };
+        const bottomLeft = { x: tile.x * tileSize, y: (tile.y + 1) * tileSize };
+        const bottomRight = { x: (tile.x + 1) * tileSize, y: (tile.y + 1) * tileSize };
+        
+        // Convert to screen space
+        const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
+        const screenTR = camera.worldToScreen(topRight.x, topRight.y);
+        const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
+        const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
+        
+        // Draw isometric tile as a parallelogram
         this.ctx.fillStyle = tile.getDisplayColor();
-        this.ctx.fillRect(
-            screenPos.x, 
-            screenPos.y, 
-            tileSize, 
-            tileSize
-        );
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenTL.x, screenTL.y);
+        this.ctx.lineTo(screenTR.x, screenTR.y);
+        this.ctx.lineTo(screenBR.x, screenBR.y);
+        this.ctx.lineTo(screenBL.x, screenBL.y);
+        this.ctx.closePath();
+        this.ctx.fill();
         
         // Draw tile border
         this.ctx.strokeStyle = Constants.COLORS.TILE_BORDER;
         this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(
-            screenPos.x, 
-            screenPos.y, 
-            tileSize, 
-            tileSize
-        );
+        this.ctx.stroke();
         
         // Draw hover effect
         if (hoveredTile && tile.x === hoveredTile.x && tile.y === hoveredTile.y && tile.walkable) {
             this.ctx.fillStyle = Constants.COLORS.HOVER;
-            this.ctx.fillRect(
-                screenPos.x, 
-                screenPos.y, 
-                tileSize, 
-                tileSize
-            );
+            this.ctx.beginPath();
+            this.ctx.moveTo(screenTL.x, screenTL.y);
+            this.ctx.lineTo(screenTR.x, screenTR.y);
+            this.ctx.lineTo(screenBR.x, screenBR.y);
+            this.ctx.lineTo(screenBL.x, screenBL.y);
+            this.ctx.closePath();
+            this.ctx.fill();
         }
     }
     
-    // Render tile highlights (current position, destination)
+    // Render tile highlights
     renderTileHighlights(player, camera) {
-        const tileSize = camera.getEffectiveTileSize();
-        
         // Highlight current player tile
         this.renderTileHighlight(
             player.tileX, 
             player.tileY, 
             Constants.COLORS.CURRENT_TILE, 
-            camera,
-            tileSize
+            camera
         );
         
         // Highlight destination tile if different from current
@@ -98,40 +117,63 @@ class Renderer {
                 player.targetX, 
                 player.targetY, 
                 Constants.COLORS.DESTINATION_TILE, 
-                camera,
-                tileSize
+                camera
             );
         }
     }
     
-    // Render a tile highlight border
-    renderTileHighlight(tileX, tileY, color, camera, tileSize) {
-        const worldX = tileX * Constants.TILE_SIZE;
-        const worldY = tileY * Constants.TILE_SIZE;
-        const screenPos = camera.worldToScreen(worldX, worldY);
+    // Render a tile highlight border in isometric
+    renderTileHighlight(tileX, tileY, color, camera) {
+        const tileSize = Constants.TILE_SIZE;
         
+        // Get the four corners of the tile in world space
+        const topLeft = { x: tileX * tileSize, y: tileY * tileSize };
+        const topRight = { x: (tileX + 1) * tileSize, y: tileY * tileSize };
+        const bottomLeft = { x: tileX * tileSize, y: (tileY + 1) * tileSize };
+        const bottomRight = { x: (tileX + 1) * tileSize, y: (tileY + 1) * tileSize };
+        
+        // Convert to screen space
+        const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
+        const screenTR = camera.worldToScreen(topRight.x, topRight.y);
+        const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
+        const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
+        
+        // Draw highlight border
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(
-            screenPos.x + 2, 
-            screenPos.y + 2, 
-            tileSize - 4, 
-            tileSize - 4
-        );
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenTL.x, screenTL.y);
+        this.ctx.lineTo(screenTR.x, screenTR.y);
+        this.ctx.lineTo(screenBR.x, screenBR.y);
+        this.ctx.lineTo(screenBL.x, screenBL.y);
+        this.ctx.closePath();
+        this.ctx.stroke();
     }
     
-    // Render the player
+    // Render the player as a vertical circle (Paper Mario style)
     renderPlayer(player, camera) {
         const worldPos = player.getWorldPosition();
-        const screenPos = camera.worldToScreen(worldPos.x, worldPos.y);
+        
+        // Get the base position on the ground
+        const baseScreen = camera.worldToScreen(worldPos.x, worldPos.y);
+        
+        // Offset upward to make player appear vertical/standing
+        const playerHeight = Constants.ISOMETRIC.PLAYER_HEIGHT * camera.zoom;
+        const yOffset = Constants.ISOMETRIC.PLAYER_Y_OFFSET * camera.zoom;
+        
+        const playerScreen = {
+            x: baseScreen.x,
+            y: baseScreen.y - playerHeight + yOffset
+        };
+        
         const radius = player.radius * camera.zoom;
         
-        // Draw player circle
+        // Draw player circle (vertical/standing)
         this.ctx.fillStyle = player.color;
         this.ctx.beginPath();
         this.ctx.arc(
-            screenPos.x, 
-            screenPos.y, 
+            playerScreen.x, 
+            playerScreen.y, 
             radius, 
             0, 
             Math.PI * 2
@@ -142,13 +184,25 @@ class Renderer {
         this.ctx.strokeStyle = player.outlineColor;
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
+        
+        // Draw a simple shadow on the ground for depth
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(
+            baseScreen.x,
+            baseScreen.y,
+            radius * 0.8,
+            radius * 0.4,
+            0,
+            0,
+            Math.PI * 2
+        );
+        this.ctx.fill();
     }
     
     // Render the path (for debugging)
     renderPath(path, camera) {
         if (!path || path.length === 0) return;
-        
-        const tileSize = camera.getEffectiveTileSize();
         
         this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
         this.ctx.lineWidth = 2;
@@ -188,7 +242,7 @@ class Renderer {
         // Clear canvas
         this.clear();
         
-        // Render layers (zoom is handled in individual render methods via camera)
+        // Render layers
         this.renderWorld(world, camera, hoveredTile);
         this.renderTileHighlights(player, camera);
         this.renderPlayer(player, camera);
