@@ -17,6 +17,12 @@ class MinimapRenderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
+    // Render black background
+    renderBackground() {
+        this.ctx.fillStyle = '#000000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    
     // Render the minimap world (same as main renderer but on minimap canvas)
     renderWorld(world) {
         const visible = this.camera.getVisibleTiles();
@@ -44,7 +50,7 @@ class MinimapRenderer {
     // Render a single tile with perspective projection
     renderTile(tile) {
         const tileSize = Constants.TILE_SIZE;
-        const overlap = Constants.TILE_OVERLAP; // Use constant for consistency
+        const overlap = Constants.TILE_OVERLAP;
         
         // Get the four corners of the tile in world space with overlap
         const topLeft = { x: tile.x * tileSize - overlap, y: tile.y * tileSize - overlap };
@@ -123,7 +129,7 @@ class MinimapRenderer {
         
         // Scale player dot with effective zoom
         const effectiveZoom = this.camera.getEffectiveZoom();
-        const scaledWidth = Constants.MINIMAP.PLAYER_WIDTH * effectiveZoom * 10; // 10x multiplier to make visible
+        const scaledWidth = Constants.MINIMAP.PLAYER_WIDTH * effectiveZoom * 10;
         const scaledHeight = Constants.MINIMAP.PLAYER_HEIGHT * effectiveZoom * 10;
         
         // Draw golden oval (scales with zoom)
@@ -141,7 +147,7 @@ class MinimapRenderer {
         this.ctx.fill();
     }
     
-    // Render the path as white dashed line
+    // Render the path as white dashed line (remaining path only)
     renderPath(path) {
         if (!path || path.length === 0) return;
         
@@ -168,9 +174,10 @@ class MinimapRenderer {
     // Main render method
     render(world, player) {
         this.clear();
+        this.renderBackground();
         this.renderWorld(world);
         this.renderTileHighlights(player);
-        this.renderPath(player.fullPath);
+        this.renderPath(player.path); // Changed from player.fullPath to player.path
         this.renderPlayer(player);
     }
 }
