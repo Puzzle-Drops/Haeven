@@ -103,23 +103,20 @@ class Game {
     tick(deltaTime) {
         if (this.paused) return;
         
-        // Get current tick number from game loop
-        const currentTick = this.gameLoop.getCurrentTick();
-        
         // Check if player destination has changed - if so, recalculate path
         if (this.player.hasDestinationChanged()) {
-            this.recalculatePlayerPath(currentTick);
+            this.recalculatePlayerPath();
         }
         
         // Process player movement
-        this.player.processTick(currentTick);
+        this.player.processTick();
         
         // Update world state (future: NPCs, time-based events)
         // this.world.update(deltaTime);
     }
     
     // Recalculate path when destination changes
-    recalculatePlayerPath(currentTick) {
+    recalculatePlayerPath() {
         const targetX = this.player.targetX;
         const targetY = this.player.targetY;
         
@@ -134,7 +131,7 @@ class Game {
         // Set the new path
         if (path.length > 1) {
             path.shift(); // Remove first element (current position)
-            this.player.setPathFromPathfinding(path, this.player.forceWalk, currentTick);
+            this.player.setPathFromPathfinding(path, this.player.forceWalk);
         } else {
             // No valid path or already at destination
             this.player.lastProcessedTargetX = this.player.tileX;
@@ -143,14 +140,11 @@ class Game {
     }
     
     // Update (animation and interpolation)
-    update(deltaTime, tickProgress) {
+    update(deltaTime) {
         if (this.paused) return;
         
-        // Get current tick number
-        const currentTick = this.gameLoop.getCurrentTick();
-        
-        // Update player animation with tick-based timing
-        this.player.updateAnimation(currentTick, tickProgress);
+        // Update player animation
+        this.player.updateAnimation(deltaTime);
         
         // Update camera to follow player
         this.camera.followPlayer(this.player);
@@ -229,13 +223,6 @@ class Game {
             `Logical: ${this.player.tileX}, ${this.player.tileY} | Anim: ${this.player.animX.toFixed(2)}, ${this.player.animY.toFixed(2)}`,
             10,
             110
-        );
-        
-        // Draw tick info
-        ctx.fillText(
-            `Tick: ${this.gameLoop.getCurrentTick()} | Progress: ${(this.gameLoop.getTickProgress() * 100).toFixed(1)}%`,
-            10,
-            130
         );
         
         // Draw controls help
