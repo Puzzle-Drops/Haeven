@@ -13,9 +13,9 @@ class Camera {
         this.smoothingSpeed = 0.1;
         
         // Zoom controls
-        this.zoom = 1.0;
-        this.minZoom = 0.5;
-        this.maxZoom = 2.0;
+        this.zoom = 0.8;
+        this.minZoom = 0.4;
+        this.maxZoom = 1.4;
         this.zoomSpeed = 0.001;
         
         // World dimensions
@@ -162,17 +162,22 @@ class Camera {
     adjustZoom(delta) {
         const oldZoom = this.zoom;
         
+        // Get the current center point in world coordinates BEFORE zoom changes
         const centerScreenX = this.viewportWidth / 2;
         const centerScreenY = this.viewportHeight / 2;
         const centerWorld = this.screenToWorld(centerScreenX, centerScreenY);
         
+        // Apply zoom change
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
         
         if (this.zoom !== oldZoom) {
+            // After zoom changes, recalculate perspective with NEW zoom
+            // This ensures the perspective center is correct for the new zoom level
             const centerPersp = this.worldToPerspective(centerWorld.x, centerWorld.y);
             const zoomedWidth = this.viewportWidth / this.zoom;
             const zoomedHeight = this.viewportHeight / this.zoom;
             
+            // Reposition camera so that the world point stays at screen center
             this.x = centerPersp.x - zoomedWidth / 2;
             this.y = centerPersp.y - zoomedHeight / 2;
         }
