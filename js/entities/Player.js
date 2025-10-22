@@ -137,81 +137,82 @@ class Player {
     }
     
     // Update animation state (SDK-style with dynamic speed)
-    updateAnimation(deltaTime) {
-        // If no waypoints, ensure we're at the correct position
-        if (this.animationWaypoints.length === 0) {
-            this.animX = this.tileX;
-            this.animY = this.tileY;
-            this.currentAnimationTarget = null;
-            return;
-        }
+updateAnimation(deltaTime) {
+    // If no waypoints, ensure we're at the correct position
+    if (this.animationWaypoints.length === 0) {
+        this.animX = this.tileX;
+        this.animY = this.tileY;
+        this.currentAnimationTarget = null;
+        return;
+    }
+    
+    // Start new segment if we don't have a target
+    if (!this.currentAnimationTarget) {
+        this.currentAnimationStart = { x: this.animX, y: this.animY };
+        this.currentAnimationTarget = this.animationWaypoints[0];
+        this.segmentProgress = 0;
+    }
+    
+    // Calculate distance for this segment
+    const dx = this.currentAnimationTarget.x - this.currentAnimationStart.x;
+    const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // SDK-STYLE SPEED CALCULATION
+    // Base: 1 tile should take 1 game tick (600ms) when walking
+    //       1 tile should take 0.5 game tick (300ms) when running
+    const ticksToComplete = this.currentAnimationTarget.run ? 0.5 : 1.0;
+    const timeToComplete = ticksToComplete * Constants.TICK_RATE; // milliseconds
+    
+    // Dynamic speed adjustment based on buffer size (SDK style)
+    let speedMultiplier = 1;
+    const bufferSize = this.animationWaypoints.length;
+    
+    if (bufferSize >= 4) {
+        speedMultiplier = 2; // Catch up fast
+    } else if (bufferSize >= 3) {
+        speedMultiplier = 1.5; // Catch up medium
+    } else if (bufferSize === 0 && this.segmentProgress > 0) {
+        speedMultiplier = 0.9; // Slow down on last segment
+    }
+    
+    // Calculate progress per millisecond
+    // distance / timeToComplete gives us tiles per ms we need to travel
+    // Then multiply by deltaTime to get progress this frame
+    // Then divide by distance to normalize to 0-1 range
+    const adjustedTime = timeToComplete / speedMultiplier;
+    
+    if (distance > 0) {
+        // Progress = (distance we should cover) / (total distance)
+        const distanceThisFrame = (distance / adjustedTime) * deltaTime;
+        this.segmentProgress += distanceThisFrame / distance;
+    } else {
+        this.segmentProgress = 1;
+    }
+    
+    // Interpolate position
+    if (this.segmentProgress >= 1) {
+        // Reached waypoint
+        this.animX = this.currentAnimationTarget.x;
+        this.animY = this.currentAnimationTarget.y;
         
-        // Start new segment if we don't have a target
-        if (!this.currentAnimationTarget) {
+        // Remove completed waypoint
+        this.animationWaypoints.shift();
+        
+        // Start next segment immediately if available
+        if (this.animationWaypoints.length > 0) {
             this.currentAnimationStart = { x: this.animX, y: this.animY };
             this.currentAnimationTarget = this.animationWaypoints[0];
             this.segmentProgress = 0;
-        }
-        
-        // Calculate distance for this segment
-        const dx = this.currentAnimationTarget.x - this.currentAnimationStart.x;
-        const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // SDK-STYLE DYNAMIC SPEED
-        const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
-        const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond;
-        
-        // Dynamic speed adjustment based on buffer size
-        let speedMultiplier = 1;
-        const bufferSize = this.animationWaypoints.length;
-        
-        if (bufferSize >= 4) {
-            speedMultiplier = 2;
-        } else if (bufferSize >= 3) {
-            speedMultiplier = 1.5;
-        } else if (bufferSize === 0 && this.segmentProgress > 0) {
-            speedMultiplier = 0.9;
-        }
-        
-        // For diagonal movement, adjust for distance
-        const isOrthogonal = (dx === 0 || dy === 0);
-        const distanceAdjustment = isOrthogonal ? 1 : Math.sqrt(2);
-        
-        // Calculate actual speed in tiles per second
-        const actualSpeed = baseSpeed * speedMultiplier * distanceAdjustment;
-        
-        // Update segment progress based on speed and time
-        if (distance > 0) {
-            this.segmentProgress += (actualSpeed * deltaTime / 1000) / distance;
         } else {
-            this.segmentProgress = 1;
+            this.currentAnimationTarget = null;
         }
-        
-        // Interpolate position
-        if (this.segmentProgress >= 1) {
-            // Reached waypoint
-            this.animX = this.currentAnimationTarget.x;
-            this.animY = this.currentAnimationTarget.y;
-            
-            // Remove completed waypoint
-            this.animationWaypoints.shift();
-            
-            // Start next segment immediately if available
-            if (this.animationWaypoints.length > 0) {
-                this.currentAnimationStart = { x: this.animX, y: this.animY };
-                this.currentAnimationTarget = this.animationWaypoints[0];
-                this.segmentProgress = 0;
-            } else {
-                this.currentAnimationTarget = null;
-            }
-        } else {
-            // Still animating - smooth interpolation
-            this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
-            this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
-        }
+    } else {
+        // Still animating - smooth interpolation
+        this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
+        this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
     }
+}
     
     // Toggle running state
     toggleRun() {
