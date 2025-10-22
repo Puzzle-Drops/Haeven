@@ -23,7 +23,7 @@ class Camera {
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
     
-    // Apply perspective projection to world coordinates (CAMERA-RELATIVE)
+    // Apply perspective projection to world coordinates (FIXED WORLD-CENTER)
     applyPerspective(worldX, worldY) {
         // First apply Y-axis foreshortening
         const perspY = worldY * Constants.PERSPECTIVE.Y_SCALE;
@@ -34,15 +34,14 @@ class Camera {
         const normalizedY = worldY / this.worldHeight;
         const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
         
-        // NEW: Camera-relative perspective center
-        // Calculate the center of the current viewport in world space
-        const cameraCenterX = this.x + (this.viewportWidth / this.zoom) / 2;
+        // FIXED: Use world center as perspective origin (eliminates zoom jump)
+        const worldCenterX = this.worldWidth / 2;
         
-        // Apply perspective scaling from the camera's viewpoint
-        const offsetX = (worldX - cameraCenterX) * scale;
+        // Apply perspective scaling from the fixed world center
+        const offsetX = (worldX - worldCenterX) * scale;
         
         return {
-            x: cameraCenterX + offsetX,
+            x: worldCenterX + offsetX,
             y: perspY,
             scale: scale // Return scale for use in rendering
         };
@@ -62,10 +61,10 @@ class Camera {
         const normalizedY = worldY / this.worldHeight;
         const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
         
-        // NEW: Camera-relative center
-        const cameraCenterX = this.x + (this.viewportWidth / this.zoom) / 2;
-        const offsetX = perspX - cameraCenterX;
-        const worldX = cameraCenterX + (offsetX / scale);
+        // FIXED: Use world center as perspective origin
+        const worldCenterX = this.worldWidth / 2;
+        const offsetX = perspX - worldCenterX;
+        const worldX = worldCenterX + (offsetX / scale);
         
         return {
             x: worldX,
