@@ -149,6 +149,9 @@ class Game {
         // Update camera to follow player
         this.camera.followPlayer(this.player);
         
+        // Recalculate hover tile based on current camera/zoom (every frame)
+        this.inputHandler.updateHoverTile();
+        
         // Update tile effects (future)
         // this.world.updateEffects(deltaTime);
     }
