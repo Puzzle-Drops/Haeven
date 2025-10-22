@@ -35,8 +35,6 @@ body {
 #game-container {
     position: relative;
     background: #1a1a1a;
-    border: 2px solid #FFD700;
-    box-sizing: border-box;
 }
 
 /* Game canvas */
@@ -46,6 +44,8 @@ canvas#gameCanvas {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    border: 2px solid #FFD700;
+    box-sizing: border-box;
 }
 
 /* Minimap canvas */
