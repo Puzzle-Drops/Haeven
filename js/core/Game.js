@@ -26,55 +26,58 @@ class Game {
     }
     
     initialize() {
-    // Initialize scaling system
-    this.scalingSystem.initialize();
-    
-    // Create world
-    this.world = new World(Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
-    
-    // Create player at start position
-    this.player = new Player(Constants.PLAYER_START.X, Constants.PLAYER_START.Y);
-    
-    // Create camera
-    this.camera = new Camera(
-        Constants.RESOLUTION.WIDTH,
-        Constants.RESOLUTION.HEIGHT
-    );
-    
-    // Immediately center camera on player (no smooth follow on init)
-    const playerWorldPos = this.player.getWorldPosition();
-    const zoomedWidth = this.camera.viewportWidth / this.camera.zoom;
-    const zoomedHeight = this.camera.viewportHeight / this.camera.zoom;
-    this.camera.x = playerWorldPos.x - zoomedWidth / 2;
-    this.camera.y = playerWorldPos.y - zoomedHeight / 2;
-    
-    // Create renderer
-    this.renderer = new Renderer(this.canvas);
-    
-    // Create pathfinding system
-    this.pathfinding = new Pathfinding(this.world);
-    
-    // Create input handler
-    this.inputHandler = new InputHandler(
-        this.canvas,
-        this.camera,
-        this.world,
-        this.player,
-        this.pathfinding,
-        this.scalingSystem
-    );
-    
-    // Create game loop
-    this.gameLoop = new GameLoop();
-    this.gameLoop.setCallbacks(
-        this.tick.bind(this),
-        this.update.bind(this),
-        this.render.bind(this)
-    );
-    
-    // Set up additional event listeners
-    this.setupEventListeners();
-}
+        // Initialize scaling system
+        this.scalingSystem.initialize();
+        
+        // Create world
+        this.world = new World(Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
+        
+        // Create player at start position
+        this.player = new Player(Constants.PLAYER_START.X, Constants.PLAYER_START.Y);
+        
+        // Create camera
+        this.camera = new Camera(
+            Constants.RESOLUTION.WIDTH,
+            Constants.RESOLUTION.HEIGHT
+        );
+        
+        // Initialize perspective origin to player position
+        const playerWorldPos = this.player.getWorldPosition();
+        this.camera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
+        
+        // Immediately center camera on player (no smooth follow on init)
+        const zoomedWidth = this.camera.viewportWidth / this.camera.zoom;
+        const zoomedHeight = this.camera.viewportHeight / this.camera.zoom;
+        this.camera.x = playerWorldPos.x - zoomedWidth / 2;
+        this.camera.y = playerWorldPos.y - zoomedHeight / 2;
+        
+        // Create renderer
+        this.renderer = new Renderer(this.canvas);
+        
+        // Create pathfinding system
+        this.pathfinding = new Pathfinding(this.world);
+        
+        // Create input handler
+        this.inputHandler = new InputHandler(
+            this.canvas,
+            this.camera,
+            this.world,
+            this.player,
+            this.pathfinding,
+            this.scalingSystem
+        );
+        
+        // Create game loop
+        this.gameLoop = new GameLoop();
+        this.gameLoop.setCallbacks(
+            this.tick.bind(this),
+            this.update.bind(this),
+            this.render.bind(this)
+        );
+        
+        // Set up additional event listeners
+        this.setupEventListeners();
+    }
     
     setupEventListeners() {
         // Debug mode toggle
@@ -173,6 +176,14 @@ class Game {
             );
         }
         
+        // Draw perspective origin info
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText(
+            `Persp Origin: ${this.camera.perspectiveOriginX.toFixed(1)}, ${this.camera.perspectiveOriginY.toFixed(1)}`,
+            10,
+            70
+        );
+        
         // Draw controls help
         ctx.fillStyle = '#00ff00';
         ctx.fillText('Controls:', 10, this.canvas.height - 110);
@@ -217,6 +228,11 @@ class Game {
         this.player.animY = Constants.PLAYER_START.Y;
         this.player.targetX = Constants.PLAYER_START.X;
         this.player.targetY = Constants.PLAYER_START.Y;
+        
+        // Reset perspective origin to player position
+        const playerWorldPos = this.player.getWorldPosition();
+        this.camera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
+        
         console.log('Player position reset');
     }
     
