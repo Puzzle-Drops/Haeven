@@ -112,7 +112,8 @@ Four categories of skills: Combat, Gathering, Processing, and Field. All skills 
 - **Cook** (Partner skill to Fish) - Trained by consuming fish at the Kitchen
 - **Smith** (Partner skill to Mine) - Trained by consuming ore at the Smithy
 - **Craft** (Partner skill to Forage) - Trained by crafting items at the Fletchery
-- **Attune** (Partner skill to Divine) - Trained by consuming magical materials at the Apothecary
+- **Attune** (Partner skill to Divine) - Trained by consuming magical materials at the Sanctum
+- **Spirit** (Partner skill to Life) - Trained by mixing potions at the Apothecary
 
 ### Field Skills
 - **Vigour** - Affects run energy regeneration
@@ -437,11 +438,11 @@ Each gathering skill follows the same progression:
 - **Magic Potions:** T1 (+4), T2 (+8), T3 (+12), T4 (+16), T5 (+20) Weave/Channel for 5 minutes
 
 ## Processing Locations
-- **Cook:** Kitchen
-- **Smith:** Smithy
-- **Craft:** Fletchery
-- **Attune:** Sanctum
-- **Potion Creation:** Apothecary (converts refined secondary resources into potions)
+- **Cook:** Kitchen (Raw fish/squid into cooked)
+- **Smith:** Smithy (Ore into bars, bars into weapons/armor)
+- **Craft:** Fletchery (Logs into bark, bark into weapons/armor)
+- **Attune:** Sanctum (Essence into powder, powder into weapons/armor)
+- **Spirit:** Apothecary (converts refined secondary resources into potions)
 
 ## Weapon Degradation System
 - **Uncharged equipment:** Functions at 75% effectiveness
