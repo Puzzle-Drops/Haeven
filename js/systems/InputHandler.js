@@ -115,23 +115,14 @@ class InputHandler {
             targetY = nearestWalkable.y;
         }
         
-        // Find path to target
-        const path = this.pathfinding.findPath(
-            this.player.tileX, this.player.tileY,
-            targetX, targetY
-        );
+        // Set player destination (just the target, no pathfinding yet)
+        this.player.setDestination(targetX, targetY, forceWalk);
         
-        // Set player path with walk override if Ctrl is held
-        if (path.length > 1) {
-            path.shift(); // Remove first element (current position)
-            this.player.setPath(path, forceWalk);
-            
-            // Log movement mode for debugging
-            if (forceWalk) {
-                console.log('Walking to destination (Ctrl+Click)');
-            } else {
-                console.log(`${this.player.running ? 'Running' : 'Walking'} to destination`);
-            }
+        // Log movement mode for debugging
+        if (forceWalk) {
+            console.log('Walking to destination (Ctrl+Click)');
+        } else {
+            console.log(`${this.player.running ? 'Running' : 'Walking'} to destination`);
         }
     }
     
