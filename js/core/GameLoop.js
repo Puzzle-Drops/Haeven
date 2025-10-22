@@ -20,6 +20,11 @@ class GameLoop {
         this.frameCount = 0;
         this.fpsUpdateTime = 0;
         
+        // Tick duration tracking
+        this.lastTickDuration = 0;
+        this.lastTickStartTime = 0;
+        this.timeSinceLastTick = 0;
+        
         // Loop state
         this.running = false;
         this.animationId = null;
@@ -42,6 +47,7 @@ class GameLoop {
         this.running = true;
         this.lastTime = performance.now();
         this.fpsUpdateTime = this.lastTime;
+        this.lastTickStartTime = this.lastTime;
         this.animationId = requestAnimationFrame(this.loop);
     }
     
@@ -65,9 +71,21 @@ class GameLoop {
         // Fixed timestep for game logic (ticks)
         this.tickAccumulator += deltaTime;
         while (this.tickAccumulator >= this.tickRate) {
+            // Track time since last tick
+            this.timeSinceLastTick = currentTime - this.lastTickStartTime;
+            
+            // Start timing this tick
+            const tickStartTime = performance.now();
+            
             if (this.onTick) {
                 this.onTick(this.tickRate);
             }
+            
+            // Calculate tick duration
+            const tickEndTime = performance.now();
+            this.lastTickDuration = tickEndTime - tickStartTime;
+            this.lastTickStartTime = tickStartTime;
+            
             this.tickAccumulator -= this.tickRate;
         }
         
@@ -105,6 +123,16 @@ class GameLoop {
     // Get current FPS
     getFPS() {
         return this.fps;
+    }
+    
+    // Get last tick duration in milliseconds
+    getLastTickDuration() {
+        return this.lastTickDuration;
+    }
+    
+    // Get time since last tick in milliseconds
+    getTimeSinceLastTick() {
+        return this.timeSinceLastTick;
     }
     
     // Get tick progress (0-1)
