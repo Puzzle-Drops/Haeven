@@ -211,7 +211,7 @@ class Player {
         // Walking: 1 tile / 0.6 seconds = 1.67 tiles/second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const tickDuration = Constants.TICK_RATE / 1000; // Convert to seconds
-        const baseSpeed = tilesPerTick / tickDuration; // tiles per second
+        const baseSpeed = 0.75 * (tilesPerTick / tickDuration); // tiles per second
         
         // Apply diagonal speed modifier
         // Diagonal moves cover sqrt(2) distance, so we need sqrt(2) speed to maintain timing
