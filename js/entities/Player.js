@@ -37,7 +37,7 @@ class Player {
     setPath(path, forceWalk = false) {
         // Store the complete path
         this.fullPath = [...path];
-        this.path = path;
+        this.path = [...path]; // Keep a copy for processTick
         this.forceWalk = forceWalk;
         
         if (path.length > 0) {
@@ -75,30 +75,35 @@ class Player {
         if (tiles.length === 0) return [];
         
         const waypoints = [];
-        let lastDirection = null;
         
-        // Start from the position we're actually moving from
+        // Calculate directions for the entire path
+        const directions = [];
         let prevX = fromX;
         let prevY = fromY;
         
         for (let i = 0; i < tiles.length; i++) {
-            // Calculate direction from previous position
             const dx = tiles[i].x - prevX;
             const dy = tiles[i].y - prevY;
-            const currentDirection = `${Math.sign(dx)},${Math.sign(dy)}`;
+            directions.push({ dx: Math.sign(dx), dy: Math.sign(dy) });
+            prevX = tiles[i].x;
+            prevY = tiles[i].y;
+        }
+        
+        // Now find corners by looking ahead
+        for (let i = 0; i < tiles.length; i++) {
+            const isLastTile = i === tiles.length - 1;
+            const isCorner = !isLastTile && 
+                            (directions[i].dx !== directions[i + 1].dx || 
+                             directions[i].dy !== directions[i + 1].dy);
             
-            // Add waypoint if direction changed or it's the last tile
-            if (currentDirection !== lastDirection || i === tiles.length - 1) {
+            // Add waypoint if it's a corner OR the last tile
+            if (isCorner || isLastTile) {
                 waypoints.push({
                     x: tiles[i].x,
                     y: tiles[i].y,
                     run: this.shouldRun()
                 });
             }
-            
-            lastDirection = currentDirection;
-            prevX = tiles[i].x;
-            prevY = tiles[i].y;
         }
         
         return waypoints;
@@ -136,83 +141,85 @@ class Player {
         return true;
     }
     
-    // Update animation state (SDK-style with dynamic speed)
-updateAnimation(deltaTime) {
-    // If no waypoints, ensure we're at the correct position
-    if (this.animationWaypoints.length === 0) {
-        this.animX = this.tileX;
-        this.animY = this.tileY;
-        this.currentAnimationTarget = null;
-        return;
-    }
-    
-    // Start new segment if we don't have a target
-    if (!this.currentAnimationTarget) {
-        this.currentAnimationStart = { x: this.animX, y: this.animY };
-        this.currentAnimationTarget = this.animationWaypoints[0];
-        this.segmentProgress = 0;
-    }
-    
-    // Calculate distance for this segment
-    const dx = this.currentAnimationTarget.x - this.currentAnimationStart.x;
-    const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // SDK-STYLE SPEED CALCULATION
-    // Base: 1 tile should take 1 game tick (600ms) when walking
-    //       1 tile should take 0.5 game tick (300ms) when running
-    const ticksToComplete = this.currentAnimationTarget.run ? 0.5 : 1.0;
-    const timeToComplete = ticksToComplete * Constants.TICK_RATE; // milliseconds
-    
-    // Dynamic speed adjustment based on buffer size (SDK style)
-    let speedMultiplier = 1;
-    const bufferSize = this.animationWaypoints.length;
-    
-    if (bufferSize >= 4) {
-        speedMultiplier = 2; // Catch up fast
-    } else if (bufferSize >= 3) {
-        speedMultiplier = 1.5; // Catch up medium
-    } else if (bufferSize === 0 && this.segmentProgress > 0) {
-        speedMultiplier = 0.9; // Slow down on last segment
-    }
-    
-    // Calculate progress per millisecond
-    // distance / timeToComplete gives us tiles per ms we need to travel
-    // Then multiply by deltaTime to get progress this frame
-    // Then divide by distance to normalize to 0-1 range
-    const adjustedTime = timeToComplete / speedMultiplier;
-    
-    if (distance > 0) {
-        // Progress = (distance we should cover) / (total distance)
-        const distanceThisFrame = (distance / adjustedTime) * deltaTime;
-        this.segmentProgress += distanceThisFrame / distance;
-    } else {
-        this.segmentProgress = 1;
-    }
-    
-    // Interpolate position
-    if (this.segmentProgress >= 1) {
-        // Reached waypoint
-        this.animX = this.currentAnimationTarget.x;
-        this.animY = this.currentAnimationTarget.y;
+    // Update animation state (SDK-style with correct speed)
+    updateAnimation(deltaTime) {
+        // If no waypoints, ensure we're at the correct position
+        if (this.animationWaypoints.length === 0) {
+            this.animX = this.tileX;
+            this.animY = this.tileY;
+            this.currentAnimationTarget = null;
+            return;
+        }
         
-        // Remove completed waypoint
-        this.animationWaypoints.shift();
-        
-        // Start next segment immediately if available
-        if (this.animationWaypoints.length > 0) {
+        // Start new segment if we don't have a target
+        if (!this.currentAnimationTarget) {
             this.currentAnimationStart = { x: this.animX, y: this.animY };
             this.currentAnimationTarget = this.animationWaypoints[0];
             this.segmentProgress = 0;
-        } else {
-            this.currentAnimationTarget = null;
         }
-    } else {
-        // Still animating - smooth interpolation
-        this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
-        this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
+        
+        // Calculate distance for this segment
+        const dx = this.currentAnimationTarget.x - this.currentAnimationStart.x;
+        const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // SDK-STYLE SPEED CALCULATION
+        // SDK: Walking = 1 tile per 600ms, Running = 2 tiles per 600ms
+        // Which equals: Walking = 1.667 tiles/sec, Running = 3.333 tiles/sec
+        const tilesPerSecond = this.currentAnimationTarget.run ? 3.333 : 1.667;
+        
+        // Dynamic speed adjustment based on buffer size (SDK style)
+        let speedMultiplier = 1;
+        const bufferSize = this.animationWaypoints.length;
+        
+        if (bufferSize >= 4) {
+            // Way behind - warp speed (SDK uses 2x)
+            speedMultiplier = 2;
+        } else if (bufferSize >= 3) {
+            // Falling behind - speed up (SDK uses 1.5x)
+            speedMultiplier = 1.5;
+        } else if (bufferSize === 1 && this.segmentProgress > 0) {
+            // Last segment - slow down slightly for smooth arrival
+            speedMultiplier = 0.9;
+        }
+        
+        // Calculate actual movement speed with multiplier
+        const actualSpeed = tilesPerSecond * speedMultiplier;
+        
+        // Update segment progress
+        // actualSpeed is tiles/second, deltaTime is milliseconds
+        // So: (actualSpeed * deltaTime / 1000) gives us tiles moved this frame
+        // Divide by distance to normalize to 0-1 progress
+        if (distance > 0) {
+            const tilesMovedThisFrame = actualSpeed * (deltaTime / 1000);
+            this.segmentProgress += tilesMovedThisFrame / distance;
+        } else {
+            this.segmentProgress = 1;
+        }
+        
+        // Interpolate position
+        if (this.segmentProgress >= 1) {
+            // Reached waypoint
+            this.animX = this.currentAnimationTarget.x;
+            this.animY = this.currentAnimationTarget.y;
+            
+            // Remove completed waypoint
+            this.animationWaypoints.shift();
+            
+            // Start next segment immediately if available
+            if (this.animationWaypoints.length > 0) {
+                this.currentAnimationStart = { x: this.animX, y: this.animY };
+                this.currentAnimationTarget = this.animationWaypoints[0];
+                this.segmentProgress = 0;
+            } else {
+                this.currentAnimationTarget = null;
+            }
+        } else {
+            // Still animating - smooth interpolation
+            this.animX = this.currentAnimationStart.x + dx * this.segmentProgress;
+            this.animY = this.currentAnimationStart.y + dy * this.segmentProgress;
+        }
     }
-}
     
     // Toggle running state
     toggleRun() {
