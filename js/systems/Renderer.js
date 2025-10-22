@@ -219,19 +219,6 @@ class Renderer {
         this.ctx.setLineDash([]);
     }
     
-    // Render debug info
-    renderDebugInfo(info) {
-        this.ctx.fillStyle = '#00ff00';
-        this.ctx.font = '12px monospace';
-        this.ctx.textAlign = 'left';
-        
-        let y = 20;
-        for (const [key, value] of Object.entries(info)) {
-            this.ctx.fillText(`${key}: ${value}`, 10, y);
-            y += 15;
-        }
-    }
-    
     // Main render method
     render(world, player, camera, hoveredTile = null, debug = false) {
         // Clear canvas
@@ -242,16 +229,9 @@ class Renderer {
         this.renderTileHighlights(player, camera);
         this.renderPlayer(player, camera);
         
-        // Optional debug rendering
+        // Optional debug rendering (path visualization only)
         if (debug) {
             this.renderPath(player.path, camera);
-            this.renderDebugInfo({
-                'Player Pos': `${player.tileX}, ${player.tileY}`,
-                'Animation': `${player.animX.toFixed(2)}, ${player.animY.toFixed(2)}`,
-                'Path Length': player.path.length,
-                'Target': `${player.targetX}, ${player.targetY}`,
-                'Zoom': `${(camera.zoom * 100).toFixed(0)}%`
-            });
         }
     }
 }
