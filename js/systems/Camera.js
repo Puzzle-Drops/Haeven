@@ -12,6 +12,12 @@ class Camera {
         this.smoothing = true;
         this.smoothingSpeed = 0.1;
         
+        // NEW: Separate perspective origin (in world coordinates)
+        // This is independent of camera position and zoom level
+        this.perspectiveOriginX = 0;
+        this.perspectiveOriginY = 0;
+        this.originSmoothingSpeed = 0.08; // Slightly slower than camera for stability
+        
         // Zoom controls
         this.zoom = 0.8;
         this.minZoom = 0.4;
@@ -23,7 +29,23 @@ class Camera {
         this.worldHeight = Constants.WORLD_HEIGHT * Constants.TILE_SIZE;
     }
     
-    // Apply perspective projection to world coordinates (CAMERA-RELATIVE)
+    // Update perspective origin (called every frame)
+    updatePerspectiveOrigin(targetWorldX, targetWorldY) {
+        // Smooth toward target position
+        const dx = targetWorldX - this.perspectiveOriginX;
+        const dy = targetWorldY - this.perspectiveOriginY;
+        
+        this.perspectiveOriginX += dx * this.originSmoothingSpeed;
+        this.perspectiveOriginY += dy * this.originSmoothingSpeed;
+    }
+    
+    // Set perspective origin immediately (for teleports, initialization)
+    setPerspectiveOrigin(worldX, worldY) {
+        this.perspectiveOriginX = worldX;
+        this.perspectiveOriginY = worldY;
+    }
+    
+    // Apply perspective projection to world coordinates (using stable origin)
     applyPerspective(worldX, worldY) {
         // First apply Y-axis foreshortening
         const perspY = worldY * Constants.PERSPECTIVE.Y_SCALE;
@@ -34,15 +56,11 @@ class Camera {
         const normalizedY = worldY / this.worldHeight;
         const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
         
-        // NEW: Camera-relative perspective center
-        // Calculate the center of the current viewport in world space
-        const cameraCenterX = this.x + (this.viewportWidth / this.zoom) / 2;
-        
-        // Apply perspective scaling from the camera's viewpoint
-        const offsetX = (worldX - cameraCenterX) * scale;
+        // Use stable perspective origin (independent of camera position/zoom)
+        const offsetX = (worldX - this.perspectiveOriginX) * scale;
         
         return {
-            x: cameraCenterX + offsetX,
+            x: this.perspectiveOriginX + offsetX,
             y: perspY,
             scale: scale // Return scale for use in rendering
         };
@@ -62,10 +80,9 @@ class Camera {
         const normalizedY = worldY / this.worldHeight;
         const scale = 1 + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
         
-        // NEW: Camera-relative center
-        const cameraCenterX = this.x + (this.viewportWidth / this.zoom) / 2;
-        const offsetX = perspX - cameraCenterX;
-        const worldX = cameraCenterX + (offsetX / scale);
+        // Use stable perspective origin
+        const offsetX = perspX - this.perspectiveOriginX;
+        const worldX = this.perspectiveOriginX + (offsetX / scale);
         
         return {
             x: worldX,
@@ -88,6 +105,11 @@ class Camera {
     // Follow a player entity
     followPlayer(player) {
         const worldPos = player.getWorldPosition();
+        
+        // Update perspective origin smoothly toward player
+        this.updatePerspectiveOrigin(worldPos.x, worldPos.y);
+        
+        // Update camera position normally
         const perspPos = this.worldToPerspective(worldPos.x, worldPos.y);
         this.centerOn(perspPos.x, perspPos.y);
     }
@@ -158,7 +180,12 @@ class Camera {
         this.smoothingSpeed = speed;
     }
     
-    // Adjust zoom level (SOLUTION 1: Lock perspective center during zoom)
+    // Set origin smoothing speed
+    setOriginSmoothingSpeed(speed) {
+        this.originSmoothingSpeed = speed;
+    }
+    
+    // Adjust zoom level (with stable perspective origin)
     adjustZoom(delta) {
         const oldZoom = this.zoom;
         
@@ -171,12 +198,14 @@ class Camera {
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
         
         if (this.zoom !== oldZoom) {
+            // CRITICAL: Perspective origin stays EXACTLY the same during zoom
+            // This eliminates the circular dependency that caused shake
+            
             // Calculate new viewport dimensions with new zoom
             const zoomedWidth = this.viewportWidth / this.zoom;
             const zoomedHeight = this.viewportHeight / this.zoom;
             
-            // Apply perspective to the world center point using the NEW zoom
-            // This ensures consistent perspective calculation
+            // Apply perspective using the STABLE origin
             const centerPersp = this.applyPerspective(centerWorld.x, centerWorld.y);
             
             // Reposition camera so that centerWorld stays at screen center
