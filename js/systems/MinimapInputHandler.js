@@ -15,8 +15,11 @@ class MinimapInputHandler {
         // Mouse wheel for zoom
         this.canvas.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
         
-        // Click to move
-        this.canvas.addEventListener('click', this.handleClick.bind(this));
+        // Mouse down for click and right-click reset
+        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        
+        // Prevent context menu
+        this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
     }
     
     handleWheel(event) {
@@ -28,10 +31,24 @@ class MinimapInputHandler {
         this.camera.adjustZoom(zoomDelta);
     }
     
-    handleClick(event) {
+    handleMouseDown(event) {
         event.preventDefault();
         event.stopPropagation();
         
+        // Right mouse button (button 2) - reset zoom
+        if (event.button === 2) {
+            this.camera.zoom = Constants.MINIMAP.DEFAULT_ZOOM;
+            console.log(`Minimap zoom reset to ${Constants.MINIMAP.DEFAULT_ZOOM} (${this.camera.getEffectiveZoom()} effective)`);
+            return;
+        }
+        
+        // Left mouse button (button 0) - move player
+        if (event.button === 0) {
+            this.handleClick(event);
+        }
+    }
+    
+    handleClick(event) {
         // Get click position relative to canvas
         const rect = this.canvas.getBoundingClientRect();
         const canvasX = event.clientX - rect.left;
@@ -79,8 +96,14 @@ class MinimapInputHandler {
         console.log(`Minimap click: moving to (${targetX}, ${targetY})`);
     }
     
+    handleContextMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     destroy() {
         this.canvas.removeEventListener('wheel', this.handleWheel);
-        this.canvas.removeEventListener('click', this.handleClick);
+        this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+        this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
     }
 }
