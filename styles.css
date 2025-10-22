@@ -29,6 +29,8 @@ body {
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
     will-change: transform;
+    border: 2px solid #FFD700;
+    box-sizing: border-box;
 }
 
 /* Game container - fixed resolution container */
