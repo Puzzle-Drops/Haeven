@@ -13,14 +13,24 @@ const Constants = {
     
     // Perspective settings (45-degree pitch with depth scaling)
     PERSPECTIVE: {
-        Y_SCALE: 0.80, // Foreshortening factor for Y-axis
-        STRENGTH: 1.00, // How much objects scale with depth (0 = flat, 1 = strong)
-        PLAYER_HEIGHT: 100, // how tall the vertical player sprite appears
-        PLAYER_Y_OFFSET: 10 // offset to position player correctly on tile (default 20)
+        Y_SCALE: 0.80,
+        STRENGTH: 1.00,
+        PLAYER_HEIGHT: 100,
+        PLAYER_Y_OFFSET: 10
+    },
+    
+    // Minimap settings
+    MINIMAP: {
+        WIDTH: 512,
+        HEIGHT: 288,
+        PLAYER_COLOR: '#FFD700',
+        PATH_COLOR: 'rgba(255, 255, 255, 0.8)',
+        FRAME_COLOR: '#FFD700',
+        FRAME_WIDTH: 2
     },
     
     // Timing settings
-    TICK_RATE: 600, // ms per game tick
+    TICK_RATE: 600,
     TARGET_FPS: 144,
     FRAME_TIME: 1000 / 144,
     
