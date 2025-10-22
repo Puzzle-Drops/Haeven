@@ -18,6 +18,11 @@ class InputHandler {
             button: -1
         };
         
+        // Cached mouse screen position (for recalculation when camera/zoom changes)
+        this.lastMouseScreenX = 0;
+        this.lastMouseScreenY = 0;
+        this.hasMousePosition = false;
+        
         // Keyboard state
         this.keys = {};
         
@@ -54,6 +59,12 @@ class InputHandler {
     
     handleMouseMove(event) {
         const screenCoords = { x: event.clientX, y: event.clientY };
+        
+        // Cache the screen coordinates
+        this.lastMouseScreenX = screenCoords.x;
+        this.lastMouseScreenY = screenCoords.y;
+        this.hasMousePosition = true;
+        
         this.updateMousePosition(screenCoords);
     }
     
@@ -68,6 +79,16 @@ class InputHandler {
         this.mouse.worldY = worldCoords.y;
         this.mouse.tileX = Math.floor(worldCoords.x / Constants.TILE_SIZE);
         this.mouse.tileY = Math.floor(worldCoords.y / Constants.TILE_SIZE);
+    }
+    
+    // Recalculate hover tile using cached screen position (called every frame)
+    updateHoverTile() {
+        if (!this.hasMousePosition) return;
+        
+        this.updateMousePosition({
+            x: this.lastMouseScreenX,
+            y: this.lastMouseScreenY
+        });
     }
     
     handleMouseDown(event) {
