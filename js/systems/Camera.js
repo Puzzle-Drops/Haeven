@@ -19,7 +19,7 @@ class Camera {
         this.originSmoothingSpeed = 0.08; // Slightly slower than camera for stability
         
         // Zoom controls
-        this.zoom = 0.8;
+        this.zoom = 0.65;
         this.minZoom = 0.4;
         this.maxZoom = 1.4;
         this.zoomSpeed = 0.001;
