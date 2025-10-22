@@ -282,11 +282,11 @@ class Game {
         yPos += lineHeight;
         
         // Draw zoom info
-        ctx.fillText(
-            `Main Zoom: ${(this.camera.zoom * 100).toFixed(0)}% | Minimap Zoom: ${(this.minimapCamera.zoom * 100).toFixed(0)}%`,
-            10,
-            yPos
-        );
+ctx.fillText(
+    `Main Zoom: ${(this.camera.zoom * 100).toFixed(0)}% | Minimap Zoom: ${(this.minimapCamera.zoom * 100).toFixed(0)}% (${(this.minimapCamera.getEffectiveZoom() * 100).toFixed(0)}% effective)`,
+    10,
+    yPos
+);
         
         // Draw controls help (bottom left)
         yPos = this.canvas.height - 110;
