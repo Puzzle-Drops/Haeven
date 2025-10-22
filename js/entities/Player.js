@@ -36,11 +36,6 @@ class Player {
     
     // Set a new path for the player to follow
     setPath(path, forceWalk = false) {
-        // CLEAR any existing animation state when setting a new path
-        this.pendingWaypoints = [];
-        this.animationWaypoints = [];
-        this.currentAnimationTarget = null;
-        
         // Store the complete path
         this.fullPath = [...path];
         this.path = path;
@@ -52,7 +47,7 @@ class Player {
             this.targetY = lastTile.y;
             
             // Process the ENTIRE path into PENDING waypoints
-            // These will be activated on the NEXT tick, not immediately
+            // These will REPLACE existing waypoints on the NEXT tick
             this.pendingWaypoints = this.calculateAnimationWaypoints(path);
         } else {
             this.pendingWaypoints = [];
@@ -148,10 +143,13 @@ class Player {
             this.tileY = nextTile.y;
         }
         
-        // ACTIVATE PENDING WAYPOINTS - this starts the animation
+        // ACTIVATE PENDING WAYPOINTS - replacing any existing ones
         if (this.pendingWaypoints.length > 0) {
-            this.animationWaypoints.push(...this.pendingWaypoints);
+            // Clear existing animation waypoints and reset animation state
+            this.animationWaypoints = [...this.pendingWaypoints];
             this.pendingWaypoints = [];
+            this.currentAnimationTarget = null;
+            this.segmentProgress = 0;
         }
         
         // Update target if path is complete
@@ -185,20 +183,13 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // SLOWER BASE SPEED - tiles per second
+        // CONSTANT SPEED - tiles per second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond * 0.7; // 70% of tick speed for smoother look
+        const baseSpeed = tilesPerTick * ticksPerSecond;
         
-        // Gentle speed adjustment based on buffer size
-        let speedMultiplier = 1;
-        const bufferSize = this.animationWaypoints.length;
-        
-        if (bufferSize >= 5) {
-            speedMultiplier = 1.3; // Gentle speedup if way behind
-        } else if (bufferSize >= 3) {
-            speedMultiplier = 1.15; // Slight speedup if behind
-        }
+        // Constant speed multiplier of 1.3
+        const speedMultiplier = 1.3;
         
         // Calculate actual speed in tiles per second
         const actualSpeed = baseSpeed * speedMultiplier;
