@@ -32,6 +32,9 @@ class Game {
         this.debugMode = false;
         this.paused = false;
         
+        // Tick counter (for debugging timing)
+        this.tickCount = 0;
+        
         // Initialize all systems
         this.initialize();
     }
@@ -148,6 +151,13 @@ class Game {
     tick(deltaTime) {
         if (this.paused) return;
         
+        // Increment tick counter
+        this.tickCount++;
+        
+        // Log tick timing information
+        const timeSinceLastTick = this.gameLoop.getTimeSinceLastTick();
+        console.log(`Tick ${this.tickCount}: Time since last tick: ${timeSinceLastTick.toFixed(2)}ms (target: 600ms)`);
+        
         // Check if player destination has changed - if so, recalculate path
         if (this.player.hasDestinationChanged()) {
             this.recalculatePlayerPath();
@@ -208,7 +218,8 @@ class Game {
             this.player,
             this.camera,
             hoveredTile,
-            this.debugMode
+            this.debugMode,
+            this.tickCount
         );
         
         // Render minimap
@@ -217,10 +228,43 @@ class Game {
             this.player
         );
         
+        // Render tick counter (always visible, left of minimap)
+        this.renderTickCounter();
+        
         // Render additional debug info if enabled
         if (this.debugMode) {
             this.renderDebugOverlay();
         }
+    }
+    
+    renderTickCounter() {
+        const ctx = this.canvas.getContext('2d');
+        
+        // Position to the left of the minimap
+        const minimapLeftEdge = Constants.RESOLUTION.WIDTH - Constants.MINIMAP.WIDTH;
+        const xPos = minimapLeftEdge - 150; // 150px to the left of minimap
+        const yPos = 50; // Top of screen with some padding
+        
+        // Set up text rendering
+        ctx.font = '36px monospace';
+        ctx.fillStyle = '#FFD700'; // Golden color
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        
+        // Add shadow for better visibility
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        // Render tick counter
+        ctx.fillText(`Tick: ${this.tickCount}`, xPos, yPos);
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
     
     renderDebugOverlay() {
@@ -242,6 +286,20 @@ class Game {
         
         // Switch to left-aligned for rest of debug info
         ctx.textAlign = 'left';
+        
+        // Draw tick counter
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText(`Tick: ${this.tickCount}`, 10, yPos);
+        yPos += lineHeight;
+        
+        // Draw tick timing info
+        const lastTickDuration = this.gameLoop.getLastTickDuration();
+        const timeSinceLastTick = this.gameLoop.getTimeSinceLastTick();
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText(`Last Tick Duration: ${lastTickDuration.toFixed(2)}ms`, 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText(`Time Since Last Tick: ${timeSinceLastTick.toFixed(2)}ms / 600ms`, 10, yPos);
+        yPos += lineHeight;
         
         // Draw movement mode indicator
         ctx.fillStyle = this.player.running ? '#00ff00' : '#ffff00';
@@ -343,6 +401,9 @@ ctx.fillText(
         this.player.targetY = Constants.PLAYER_START.Y;
         this.player.lastProcessedTargetX = Constants.PLAYER_START.X;
         this.player.lastProcessedTargetY = Constants.PLAYER_START.Y;
+        
+        // Reset tick counter
+        this.tickCount = 0;
         
         // Reset perspective origin to player position
         const playerWorldPos = this.player.getWorldPosition();
