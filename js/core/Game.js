@@ -7,6 +7,12 @@ class Game {
             throw new Error('Canvas element not found');
         }
         
+        // Get minimap canvas
+        this.minimapCanvas = document.getElementById('minimapCanvas');
+        if (!this.minimapCanvas) {
+            throw new Error('Minimap canvas element not found');
+        }
+        
         // Core systems
         this.scalingSystem = new ScalingSystem();
         this.world = null;
@@ -16,6 +22,11 @@ class Game {
         this.pathfinding = null;
         this.inputHandler = null;
         this.gameLoop = null;
+        
+        // Minimap systems
+        this.minimapCamera = null;
+        this.minimapRenderer = null;
+        this.minimapInputHandler = null;
         
         // Game state
         this.debugMode = false;
@@ -35,7 +46,7 @@ class Game {
         // Create player at start position
         this.player = new Player(Constants.PLAYER_START.X, Constants.PLAYER_START.Y);
         
-        // Create camera
+        // Create main camera
         this.camera = new Camera(
             Constants.RESOLUTION.WIDTH,
             Constants.RESOLUTION.HEIGHT
@@ -51,8 +62,28 @@ class Game {
         this.camera.x = playerWorldPos.x - zoomedWidth / 2;
         this.camera.y = playerWorldPos.y - zoomedHeight / 2;
         
+        // Create minimap camera
+        this.minimapCamera = new MinimapCamera(
+            Constants.MINIMAP.WIDTH,
+            Constants.MINIMAP.HEIGHT
+        );
+        this.minimapCamera.setWorldBounds(
+            Constants.WORLD_WIDTH * Constants.TILE_SIZE,
+            Constants.WORLD_HEIGHT * Constants.TILE_SIZE
+        );
+        
+        // Initialize minimap camera to player position
+        this.minimapCamera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
+        const minimapZoomedWidth = this.minimapCamera.viewportWidth / this.minimapCamera.zoom;
+        const minimapZoomedHeight = this.minimapCamera.viewportHeight / this.minimapCamera.zoom;
+        this.minimapCamera.x = playerWorldPos.x - minimapZoomedWidth / 2;
+        this.minimapCamera.y = playerWorldPos.y - minimapZoomedHeight / 2;
+        
         // Create renderer
         this.renderer = new Renderer(this.canvas);
+        
+        // Create minimap renderer
+        this.minimapRenderer = new MinimapRenderer(this.minimapCanvas, this.minimapCamera);
         
         // Create pathfinding system
         this.pathfinding = new Pathfinding(this.world);
@@ -61,6 +92,16 @@ class Game {
         this.inputHandler = new InputHandler(
             this.canvas,
             this.camera,
+            this.world,
+            this.player,
+            this.pathfinding,
+            this.scalingSystem
+        );
+        
+        // Create minimap input handler
+        this.minimapInputHandler = new MinimapInputHandler(
+            this.minimapCanvas,
+            this.minimapCamera,
             this.world,
             this.player,
             this.pathfinding,
@@ -110,9 +151,6 @@ class Game {
         
         // Process player movement
         this.player.processTick();
-        
-        // Update world state (future: NPCs, time-based events)
-        // this.world.update(deltaTime);
     }
     
     // Recalculate path when destination changes
@@ -130,10 +168,9 @@ class Game {
         
         // Set the new path
         if (path.length > 1) {
-            path.shift(); // Remove first element (current position)
+            path.shift();
             this.player.setPathFromPathfinding(path, this.player.forceWalk);
         } else {
-            // No valid path or already at destination
             this.player.lastProcessedTargetX = this.player.tileX;
             this.player.lastProcessedTargetY = this.player.tileY;
         }
@@ -146,14 +183,14 @@ class Game {
         // Update player animation
         this.player.updateAnimation(deltaTime);
         
-        // Update camera to follow player
+        // Update main camera to follow player
         this.camera.followPlayer(this.player);
+        
+        // Update minimap camera to follow player
+        this.minimapCamera.followPlayer(this.player);
         
         // Recalculate hover tile based on current camera/zoom (every frame)
         this.inputHandler.updateHoverTile();
-        
-        // Update tile effects (future)
-        // this.world.updateEffects(deltaTime);
     }
     
     // Render the game
@@ -161,13 +198,19 @@ class Game {
         // Get hovered tile from input handler
         const hoveredTile = this.inputHandler.getHoveredTile();
         
-        // Render everything
+        // Render main game
         this.renderer.render(
             this.world,
             this.player,
             this.camera,
             hoveredTile,
             this.debugMode
+        );
+        
+        // Render minimap
+        this.minimapRenderer.render(
+            this.world,
+            this.player
         );
         
         // Render additional debug info if enabled
@@ -240,7 +283,7 @@ class Game {
         
         // Draw zoom info
         ctx.fillText(
-            `Zoom: ${(this.camera.zoom * 100).toFixed(0)}%`,
+            `Main Zoom: ${(this.camera.zoom * 100).toFixed(0)}% | Minimap Zoom: ${(this.minimapCamera.zoom * 100).toFixed(0)}%`,
             10,
             yPos
         );
@@ -300,6 +343,7 @@ class Game {
         // Reset perspective origin to player position
         const playerWorldPos = this.player.getWorldPosition();
         this.camera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
+        this.minimapCamera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
         
         console.log('Player position reset');
     }
@@ -308,6 +352,7 @@ class Game {
     destroy() {
         this.gameLoop.stop();
         this.inputHandler.destroy();
+        this.minimapInputHandler.destroy();
         this.scalingSystem.destroy();
         console.log('Game destroyed');
     }
