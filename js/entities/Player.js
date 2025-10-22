@@ -12,6 +12,8 @@ class Player {
         // Target destination
         this.targetX = startX;
         this.targetY = startY;
+        this.lastProcessedTargetX = startX;
+        this.lastProcessedTargetY = startY;
         
         // Pathfinding
         this.path = [];
@@ -22,7 +24,7 @@ class Player {
         this.forceWalk = false;
         
         // Animation system
-        this.pendingWaypoints = []; // Waypoints waiting for next tick
+        this.pendingWaypoints = []; // Waypoints waiting for activation
         this.animationWaypoints = []; // Active waypoints being animated
         this.currentAnimationStart = { x: startX, y: startY };
         this.currentAnimationTarget = null;
@@ -34,9 +36,15 @@ class Player {
         this.radius = Constants.TILE_SIZE / 3;
     }
     
-    // Set a new path for the player to follow
-    setPath(path, forceWalk = false) {
-        // Store the complete path
+    // Set a new destination (called on click)
+    setDestination(targetX, targetY, forceWalk = false) {
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.forceWalk = forceWalk;
+    }
+    
+    // Set a path with full pathfinding info (called internally)
+    setPathFromPathfinding(path, forceWalk = false) {
         this.fullPath = [...path];
         this.path = path;
         this.forceWalk = forceWalk;
@@ -45,9 +53,10 @@ class Player {
             const lastTile = path[path.length - 1];
             this.targetX = lastTile.x;
             this.targetY = lastTile.y;
+            this.lastProcessedTargetX = lastTile.x;
+            this.lastProcessedTargetY = lastTile.y;
             
-            // Process the ENTIRE path into PENDING waypoints
-            // These will REPLACE existing waypoints on the NEXT tick
+            // Calculate waypoints starting from LOGICAL position
             this.pendingWaypoints = this.calculateAnimationWaypoints(path);
         } else {
             this.pendingWaypoints = [];
@@ -63,6 +72,8 @@ class Player {
         this.currentAnimationTarget = null;
         this.targetX = this.tileX;
         this.targetY = this.tileY;
+        this.lastProcessedTargetX = this.tileX;
+        this.lastProcessedTargetY = this.tileY;
         this.forceWalk = false;
     }
     
@@ -74,7 +85,7 @@ class Player {
         let lastDirection = null;
         let previousTile = { x: this.tileX, y: this.tileY };
         
-        // Always start with current position
+        // Always start with current LOGICAL position
         waypoints.push({
             x: this.tileX,
             y: this.tileY,
@@ -126,9 +137,19 @@ class Player {
         return this.running && !this.forceWalk;
     }
     
+    // Check if destination has changed
+    hasDestinationChanged() {
+        return this.targetX !== this.lastProcessedTargetX || 
+               this.targetY !== this.lastProcessedTargetY;
+    }
+    
     // Process movement for this game tick
     processTick() {
-        // If no path, don't process anything
+        // Check if destination has changed - if so, need new path
+        // This is handled externally by Game.js calling setPathFromPathfinding
+        // Here we just process existing path
+        
+        // If no path, nothing to do
         if (this.path.length === 0) {
             return false;
         }
@@ -144,10 +165,9 @@ class Player {
             this.tileY = nextTile.y;
         }
         
-        // ONLY activate pending waypoints AFTER we've actually moved
-        // This ensures waypoints are replaced at tick boundaries, not mid-tick
+        // Activate pending waypoints AFTER moving
         if (this.pendingWaypoints.length > 0) {
-            // Clear existing animation waypoints and reset animation state
+            // Clear existing animation and set new waypoints
             this.animationWaypoints = [...this.pendingWaypoints];
             this.pendingWaypoints = [];
             this.currentAnimationTarget = null;
@@ -156,8 +176,8 @@ class Player {
         
         // Update target if path is complete
         if (this.path.length === 0) {
-            this.targetX = this.tileX;
-            this.targetY = this.tileY;
+            this.lastProcessedTargetX = this.tileX;
+            this.lastProcessedTargetY = this.tileY;
             this.forceWalk = false;
         }
         
@@ -167,7 +187,6 @@ class Player {
     // Update animation state
     updateAnimation(deltaTime) {
         // If no waypoints, stay at current animation position
-        // DO NOT try to catch up to logical position
         if (this.animationWaypoints.length === 0) {
             this.currentAnimationTarget = null;
             return;
@@ -185,13 +204,19 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // CONSTANT SPEED - tiles per second
+        // SPEED CALCULATION:
+        // Logical position moves 2 tiles per 600ms tick when running (1 tile when walking)
+        // Animation needs to complete in 600ms to stay synchronized
+        // Running: 2 tiles / 0.6 seconds = 3.33 tiles/second
+        // Walking: 1 tile / 0.6 seconds = 1.67 tiles/second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
-        const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond;
+        const tickDuration = Constants.TICK_RATE / 1000; // Convert to seconds
+        const baseSpeed = tilesPerTick / tickDuration; // tiles per second
         
-        // Constant speed multiplier of 1.3
-        const speedMultiplier = 1.1;
+        // Apply diagonal speed modifier
+        // Diagonal moves cover sqrt(2) distance, so we need sqrt(2) speed to maintain timing
+        const isDiagonal = (dx !== 0 && dy !== 0);
+        const speedMultiplier = isDiagonal ? Math.sqrt(2) : 1;
         
         // Calculate actual speed in tiles per second
         const actualSpeed = baseSpeed * speedMultiplier;
