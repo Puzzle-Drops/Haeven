@@ -55,7 +55,7 @@ class Renderer {
     // Render a single tile with perspective projection
 renderTile(tile, camera, hoveredTile) {
     const tileSize = Constants.TILE_SIZE;
-    const overlap = Constants.TILE_OVERLAP; // Use constant instead of hardcoded value
+    const overlap = Constants.TILE_OVERLAP;
     
     // Get the four corners of the tile in world space with overlap
     const topLeft = { x: tile.x * tileSize - overlap, y: tile.y * tileSize - overlap };
@@ -195,6 +195,50 @@ renderTile(tile, camera, hoveredTile) {
         this.ctx.stroke();
     }
     
+    // Render tick counter above player's head (debug mode only)
+    renderTickCounterAbovePlayer(player, camera, tickCount) {
+        const worldPos = player.getWorldPosition();
+        
+        // Get the base position on the ground with perspective
+        const baseScreen = camera.worldToScreen(worldPos.x, worldPos.y);
+        
+        // Calculate perspective scale for this Y position
+        const normalizedY = worldPos.y / (Constants.WORLD_HEIGHT * Constants.TILE_SIZE);
+        const perspectiveScale = 1 - (Constants.PERSPECTIVE.STRENGTH / 2) + (normalizedY * Constants.PERSPECTIVE.STRENGTH);
+        
+        // Apply perspective scale to player dimensions
+        const playerHeight = Constants.PERSPECTIVE.PLAYER_HEIGHT * camera.zoom * perspectiveScale;
+        const yOffset = Constants.PERSPECTIVE.PLAYER_Y_OFFSET * camera.zoom * perspectiveScale;
+        
+        // Position text above player's head
+        const textX = baseScreen.x;
+        const textY = baseScreen.y - playerHeight + yOffset - 50; // 50px above player
+        
+        // Set up text rendering
+        this.ctx.font = '36px monospace';
+        this.ctx.fillStyle = '#FFD700'; // Golden color
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'bottom';
+        
+        // Add shadow for better visibility
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        this.ctx.shadowBlur = 6;
+        this.ctx.shadowOffsetX = 2;
+        this.ctx.shadowOffsetY = 2;
+        
+        // Render tick counter
+        this.ctx.fillText(`Tick: ${tickCount}`, textX, textY);
+        
+        // Reset shadow
+        this.ctx.shadowColor = 'transparent';
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowOffsetX = 0;
+        this.ctx.shadowOffsetY = 0;
+        
+        // Reset text baseline
+        this.ctx.textBaseline = 'top';
+    }
+    
     // Render the path (for debugging)
     renderPath(path, camera) {
         if (!path || path.length === 0) return;
@@ -220,7 +264,7 @@ renderTile(tile, camera, hoveredTile) {
     }
     
     // Main render method
-    render(world, player, camera, hoveredTile = null, debug = false) {
+    render(world, player, camera, hoveredTile = null, debug = false, tickCount = 0) {
         // Clear canvas
         this.clear();
         
@@ -229,9 +273,10 @@ renderTile(tile, camera, hoveredTile) {
         this.renderTileHighlights(player, camera);
         this.renderPlayer(player, camera);
         
-        // Optional debug rendering (path visualization only)
+        // Optional debug rendering
         if (debug) {
             this.renderPath(player.path, camera);
+            this.renderTickCounterAbovePlayer(player, camera, tickCount);
         }
     }
 }
