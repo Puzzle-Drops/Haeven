@@ -22,7 +22,8 @@ class Player {
         this.forceWalk = false;
         
         // Animation system
-        this.animationWaypoints = [];
+        this.pendingWaypoints = []; // Waypoints waiting for next tick
+        this.animationWaypoints = []; // Active waypoints being animated
         this.currentAnimationStart = { x: startX, y: startY };
         this.currentAnimationTarget = null;
         this.segmentProgress = 0;
@@ -45,10 +46,11 @@ class Player {
             this.targetX = lastTile.x;
             this.targetY = lastTile.y;
             
-            // Process the ENTIRE path into animation waypoints upfront
-            this.animationWaypoints = this.calculateAnimationWaypoints(path);
+            // Process the ENTIRE path into PENDING waypoints
+            // These will be activated on the NEXT tick, not immediately
+            this.pendingWaypoints = this.calculateAnimationWaypoints(path);
         } else {
-            this.animationWaypoints = [];
+            this.pendingWaypoints = [];
         }
     }
     
@@ -56,6 +58,7 @@ class Player {
     clearPath() {
         this.path = [];
         this.fullPath = [];
+        this.pendingWaypoints = [];
         this.animationWaypoints = [];
         this.currentAnimationTarget = null;
         this.targetX = this.tileX;
@@ -140,6 +143,12 @@ class Player {
             this.tileY = nextTile.y;
         }
         
+        // ACTIVATE PENDING WAYPOINTS - this starts the animation
+        if (this.pendingWaypoints.length > 0) {
+            this.animationWaypoints.push(...this.pendingWaypoints);
+            this.pendingWaypoints = [];
+        }
+        
         // Update target if path is complete
         if (this.path.length === 0) {
             this.targetX = this.tileX;
@@ -152,23 +161,9 @@ class Player {
     
     // Update animation state
     updateAnimation(deltaTime) {
-        // If no waypoints, smoothly move toward logical position
+        // If no waypoints, stay at current animation position
+        // DO NOT try to catch up to logical position
         if (this.animationWaypoints.length === 0) {
-            // Smooth catchup to logical position when animation completes
-            const dx = this.tileX - this.animX;
-            const dy = this.tileY - this.animY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0.01) {
-                // Gentle smoothing toward final position
-                const smoothingSpeed = 0.15;
-                this.animX += dx * smoothingSpeed;
-                this.animY += dy * smoothingSpeed;
-            } else {
-                this.animX = this.tileX;
-                this.animY = this.tileY;
-            }
-            
             this.currentAnimationTarget = null;
             return;
         }
@@ -249,7 +244,7 @@ class Player {
     
     // Check if player is currently moving
     isMoving() {
-        return this.path.length > 0 || this.animationWaypoints.length > 0;
+        return this.path.length > 0 || this.animationWaypoints.length > 0 || this.pendingWaypoints.length > 0;
     }
     
     // Check if player has reached destination
