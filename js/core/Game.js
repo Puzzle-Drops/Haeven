@@ -257,8 +257,8 @@ class Game {
         ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 2;
         
-        // Render tick counter
-        ctx.fillText(`Tick: ${this.tickCount}`, xPos, yPos);
+        // Render tick counter (just the number)
+        ctx.fillText(`${this.tickCount}`, xPos, yPos);
         
         // Reset shadow
         ctx.shadowColor = 'transparent';
