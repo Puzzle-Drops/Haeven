@@ -36,6 +36,11 @@ class Player {
     
     // Set a new path for the player to follow
     setPath(path, forceWalk = false) {
+        // CLEAR any existing animation state when setting a new path
+        this.pendingWaypoints = [];
+        this.animationWaypoints = [];
+        this.currentAnimationTarget = null;
+        
         // Store the complete path
         this.fullPath = [...path];
         this.path = path;
