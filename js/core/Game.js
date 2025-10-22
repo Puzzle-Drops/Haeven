@@ -57,10 +57,12 @@ class Game {
         this.camera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
         
         // Immediately center camera on player (no smooth follow on init)
+        // IMPORTANT: Use perspective coordinates, not world coordinates
+        const playerPerspPos = this.camera.worldToPerspective(playerWorldPos.x, playerWorldPos.y);
         const zoomedWidth = this.camera.viewportWidth / this.camera.zoom;
         const zoomedHeight = this.camera.viewportHeight / this.camera.zoom;
-        this.camera.x = playerWorldPos.x - zoomedWidth / 2;
-        this.camera.y = playerWorldPos.y - zoomedHeight / 2;
+        this.camera.x = playerPerspPos.x - zoomedWidth / 2;
+        this.camera.y = playerPerspPos.y - zoomedHeight / 2;
         
         // Create minimap camera
         this.minimapCamera = new MinimapCamera(
@@ -74,10 +76,12 @@ class Game {
         
         // Initialize minimap camera to player position
         this.minimapCamera.setPerspectiveOrigin(playerWorldPos.x, playerWorldPos.y);
-        const minimapZoomedWidth = this.minimapCamera.viewportWidth / this.minimapCamera.zoom;
-        const minimapZoomedHeight = this.minimapCamera.viewportHeight / this.minimapCamera.zoom;
-        this.minimapCamera.x = playerWorldPos.x - minimapZoomedWidth / 2;
-        this.minimapCamera.y = playerWorldPos.y - minimapZoomedHeight / 2;
+        const minimapPerspPos = this.minimapCamera.worldToPerspective(playerWorldPos.x, playerWorldPos.y);
+        const minimapEffectiveZoom = this.minimapCamera.getEffectiveZoom();
+        const minimapZoomedWidth = this.minimapCamera.viewportWidth / minimapEffectiveZoom;
+        const minimapZoomedHeight = this.minimapCamera.viewportHeight / minimapEffectiveZoom;
+        this.minimapCamera.x = minimapPerspPos.x - minimapZoomedWidth / 2;
+        this.minimapCamera.y = minimapPerspPos.y - minimapZoomedHeight / 2;
         
         // Create renderer
         this.renderer = new Renderer(this.canvas);
