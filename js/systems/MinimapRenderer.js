@@ -44,7 +44,7 @@ class MinimapRenderer {
     // Render a single tile with perspective projection
     renderTile(tile) {
         const tileSize = Constants.TILE_SIZE;
-        const overlap = 0.5;
+        const overlap = Constants.TILE_OVERLAP; // Use constant for consistency
         
         // Get the four corners of the tile in world space with overlap
         const topLeft = { x: tile.x * tileSize - overlap, y: tile.y * tileSize - overlap };
@@ -69,19 +69,71 @@ class MinimapRenderer {
         this.ctx.fill();
     }
     
-    // Render the player as a golden oval in the center
+    // Render tile highlights
+    renderTileHighlights(player) {
+        // Highlight current player tile
+        this.renderTileHighlight(
+            player.tileX,
+            player.tileY,
+            Constants.COLORS.CURRENT_TILE
+        );
+        
+        // Highlight destination tile if different from current
+        if (player.targetX !== player.tileX || player.targetY !== player.tileY) {
+            this.renderTileHighlight(
+                player.targetX,
+                player.targetY,
+                Constants.COLORS.DESTINATION_TILE
+            );
+        }
+    }
+    
+    // Render a tile highlight border with perspective
+    renderTileHighlight(tileX, tileY, color) {
+        const tileSize = Constants.TILE_SIZE;
+        
+        // Get the four corners of the tile in world space
+        const topLeft = { x: tileX * tileSize, y: tileY * tileSize };
+        const topRight = { x: (tileX + 1) * tileSize, y: tileY * tileSize };
+        const bottomLeft = { x: tileX * tileSize, y: (tileY + 1) * tileSize };
+        const bottomRight = { x: (tileX + 1) * tileSize, y: (tileY + 1) * tileSize };
+        
+        // Convert to screen space
+        const screenTL = this.camera.worldToScreen(topLeft.x, topLeft.y);
+        const screenTR = this.camera.worldToScreen(topRight.x, topRight.y);
+        const screenBL = this.camera.worldToScreen(bottomLeft.x, bottomLeft.y);
+        const screenBR = this.camera.worldToScreen(bottomRight.x, bottomRight.y);
+        
+        // Draw highlight border
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = Constants.MINIMAP.HIGHLIGHT_WIDTH;
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenTL.x, screenTL.y);
+        this.ctx.lineTo(screenTR.x, screenTR.y);
+        this.ctx.lineTo(screenBR.x, screenBR.y);
+        this.ctx.lineTo(screenBL.x, screenBL.y);
+        this.ctx.closePath();
+        this.ctx.stroke();
+    }
+    
+    // Render the player as a golden oval that scales with zoom
     renderPlayer(player) {
         const worldPos = player.getWorldPosition();
         const screenPos = this.camera.worldToScreen(worldPos.x, worldPos.y);
         
-        // Draw golden oval (2px wide x 4px tall)
+        // Scale player dot with effective zoom
+        const effectiveZoom = this.camera.getEffectiveZoom();
+        const scaledWidth = Constants.MINIMAP.PLAYER_WIDTH * effectiveZoom * 10; // 10x multiplier to make visible
+        const scaledHeight = Constants.MINIMAP.PLAYER_HEIGHT * effectiveZoom * 10;
+        
+        // Draw golden oval (scales with zoom)
         this.ctx.fillStyle = Constants.MINIMAP.PLAYER_COLOR;
         this.ctx.beginPath();
         this.ctx.ellipse(
             screenPos.x,
             screenPos.y,
-            2, // width radius
-            4, // height radius
+            scaledWidth,
+            scaledHeight,
             0,
             0,
             Math.PI * 2
@@ -117,6 +169,7 @@ class MinimapRenderer {
     render(world, player) {
         this.clear();
         this.renderWorld(world);
+        this.renderTileHighlights(player);
         this.renderPath(player.fullPath);
         this.renderPlayer(player);
     }
