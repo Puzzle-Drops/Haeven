@@ -23,6 +23,8 @@ const Constants = {
     MINIMAP: {
         WIDTH: 512,
         HEIGHT: 288,
+        ZOOM_MULTIPLIER: 0.125,
+        DEFAULT_ZOOM: 0.8,
         PLAYER_COLOR: '#FFD700',
         PATH_COLOR: 'rgba(255, 255, 255, 0.8)',
         FRAME_COLOR: '#FFD700',
