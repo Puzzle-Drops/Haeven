@@ -226,8 +226,8 @@ renderTile(tile, camera, hoveredTile) {
         this.ctx.shadowOffsetX = 2;
         this.ctx.shadowOffsetY = 2;
         
-        // Render tick counter
-        this.ctx.fillText(`Tick: ${tickCount}`, textX, textY);
+        // Render tick counter (just the number)
+        this.ctx.fillText(`${tickCount}`, textX, textY);
         
         // Reset shadow
         this.ctx.shadowColor = 'transparent';
