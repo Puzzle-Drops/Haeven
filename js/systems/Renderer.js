@@ -78,10 +78,11 @@ class Renderer {
         this.ctx.closePath();
         this.ctx.fill();
         
-        // Draw tile border
-        this.ctx.strokeStyle = Constants.COLORS.TILE_BORDER;
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
+        if (debug) {
+            this.ctx.strokeStyle = Constants.COLORS.TILE_BORDER;
+            this.ctx.lineWidth = 1;
+            this.ctx.stroke();
+        }
         
         // Draw hover effect
         if (hoveredTile && tile.x === hoveredTile.x && tile.y === hoveredTile.y && tile.walkable) {
