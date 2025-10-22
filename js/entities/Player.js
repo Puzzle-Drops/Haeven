@@ -205,25 +205,19 @@ class Player {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // SPEED CALCULATION:
-        // Logical position moves 2 tiles per 600ms tick when running (1 tile when walking)
-        // Animation needs to complete in 600ms to stay synchronized
-        // Running: 2 tiles / 0.6 seconds = 3.33 tiles/second
-        // Walking: 1 tile / 0.6 seconds = 1.67 tiles/second
-        const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
-        const tickDuration = Constants.TICK_RATE / 1000; // Convert to seconds
-        const baseSpeed = tilesPerTick / tickDuration; // tiles per second
+        // Goal: Complete segment in 600ms regardless of direction
+        // Walking cardinal: 1 tile in 600ms
+        // Walking diagonal: √2 tiles in 600ms
+        // Running cardinal: 2 tiles in 600ms
+        // Running diagonal: 2√2 tiles in 600ms
         
-        // Apply diagonal speed modifier
-        // Diagonal moves cover sqrt(2) distance, so we need sqrt(2) speed to maintain timing
-        const isDiagonal = (dx !== 0 && dy !== 0);
-        const speedMultiplier = isDiagonal ? Math.sqrt(2) : 1;
-        
-        // Calculate actual speed in tiles per second
-        const actualSpeed = baseSpeed * speedMultiplier;
+        // The speed is simply: distance / time
+        const segmentDuration = Constants.TICK_RATE / 1000; // 0.6 seconds
+        const speed = distance / segmentDuration; // tiles per second
         
         // Update segment progress based on speed and time
         if (distance > 0) {
-            this.segmentProgress += (actualSpeed * deltaTime / 1000) / distance;
+            this.segmentProgress += (speed * deltaTime / 1000) / distance;
         } else {
             this.segmentProgress = 1;
         }
