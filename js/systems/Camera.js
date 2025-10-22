@@ -158,7 +158,7 @@ class Camera {
         this.smoothingSpeed = speed;
     }
     
-    // Adjust zoom level
+    // Adjust zoom level (SOLUTION 1: Lock perspective center during zoom)
     adjustZoom(delta) {
         const oldZoom = this.zoom;
         
@@ -171,13 +171,15 @@ class Camera {
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom + delta));
         
         if (this.zoom !== oldZoom) {
-            // After zoom changes, recalculate perspective with NEW zoom
-            // This ensures the perspective center is correct for the new zoom level
-            const centerPersp = this.worldToPerspective(centerWorld.x, centerWorld.y);
+            // Calculate new viewport dimensions with new zoom
             const zoomedWidth = this.viewportWidth / this.zoom;
             const zoomedHeight = this.viewportHeight / this.zoom;
             
-            // Reposition camera so that the world point stays at screen center
+            // Apply perspective to the world center point using the NEW zoom
+            // This ensures consistent perspective calculation
+            const centerPersp = this.applyPerspective(centerWorld.x, centerWorld.y);
+            
+            // Reposition camera so that centerWorld stays at screen center
             this.x = centerPersp.x - zoomedWidth / 2;
             this.y = centerPersp.y - zoomedHeight / 2;
         }
