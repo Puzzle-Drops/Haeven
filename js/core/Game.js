@@ -151,12 +151,13 @@ class Game {
     tick(deltaTime) {
         if (this.paused) return;
         
-        // Increment tick counter
+        // Increment tick counter FIRST THING
         this.tickCount++;
         
-        // Log tick timing information
+        // Log tick timing information (time measured at start of tick in GameLoop)
         const timeSinceLastTick = this.gameLoop.getTimeSinceLastTick();
-        console.log(`Tick ${this.tickCount}: Time since last tick: ${timeSinceLastTick.toFixed(2)}ms (target: 600ms)`);
+        const lastTickDuration = this.gameLoop.getLastTickDuration();
+        console.log(`Tick ${this.tickCount}: ${timeSinceLastTick.toFixed(2)}ms since last tick start | Last tick execution: ${lastTickDuration.toFixed(2)}ms`);
         
         // Check if player destination has changed - if so, recalculate path
         if (this.player.hasDestinationChanged()) {
