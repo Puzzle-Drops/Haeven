@@ -33,23 +33,6 @@ document.addEventListener('dragstart', (event) => {
     }
 });
 
-// Handle visibility change (pause when tab is hidden)
-document.addEventListener('visibilitychange', () => {
-    if (!game) return;
-    
-    if (document.hidden) {
-        // Tab is hidden, pause the game
-        if (!game.paused) {
-            game.togglePause();
-            console.log('Game paused (tab hidden)');
-        }
-    } else {
-        // Tab is visible again
-        // Note: We don't auto-resume to avoid unexpected behavior
-        console.log('Tab visible again (press P to resume)');
-    }
-});
-
 // Error handling
 window.addEventListener('error', (event) => {
     console.error('Game error:', event.error);
