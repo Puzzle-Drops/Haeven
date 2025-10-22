@@ -7,13 +7,13 @@ const Constants = {
     },
     
     // Tile and world settings
-    TILE_SIZE: 128,
+    TILE_SIZE: 164,
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
     
     // Perspective settings (45-degree pitch with depth scaling)
     PERSPECTIVE: {
-        Y_SCALE: 0.780, // Foreshortening factor for Y-axis
+        Y_SCALE: 0.80, // Foreshortening factor for Y-axis
         STRENGTH: 1.00, // How much objects scale with depth (0 = flat, 1 = strong)
         PLAYER_HEIGHT: 100, // how tall the vertical player sprite appears
         PLAYER_Y_OFFSET: 10 // offset to position player correctly on tile (default 20)
