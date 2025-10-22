@@ -92,7 +92,7 @@ class Game {
                 this.togglePause();
             }
             
-            // Reset player position (keep R for reset, not run toggle)
+            // Reset player position
             if (event.code === 'KeyR' && event.shiftKey) {
                 this.resetPlayer();
             }
@@ -103,11 +103,40 @@ class Game {
     tick(deltaTime) {
         if (this.paused) return;
         
+        // Check if player destination has changed - if so, recalculate path
+        if (this.player.hasDestinationChanged()) {
+            this.recalculatePlayerPath();
+        }
+        
         // Process player movement
         this.player.processTick();
         
         // Update world state (future: NPCs, time-based events)
         // this.world.update(deltaTime);
+    }
+    
+    // Recalculate path when destination changes
+    recalculatePlayerPath() {
+        const targetX = this.player.targetX;
+        const targetY = this.player.targetY;
+        
+        // Find path from current LOGICAL position to target
+        const path = this.pathfinding.findPath(
+            this.player.tileX,
+            this.player.tileY,
+            targetX,
+            targetY
+        );
+        
+        // Set the new path
+        if (path.length > 1) {
+            path.shift(); // Remove first element (current position)
+            this.player.setPathFromPathfinding(path, this.player.forceWalk);
+        } else {
+            // No valid path or already at destination
+            this.player.lastProcessedTargetX = this.player.tileX;
+            this.player.lastProcessedTargetY = this.player.tileY;
+        }
     }
     
     // Update (animation and interpolation)
@@ -170,9 +199,14 @@ class Game {
         if (this.player.isMoving()) {
             ctx.fillStyle = '#00ff00';
             ctx.fillText(
-                `Path: ${this.player.path.length} tiles | Buffer: ${this.player.animationWaypoints.length} waypoints`,
+                `Path: ${this.player.path.length} tiles | Anim: ${this.player.animationWaypoints.length} waypoints`,
                 10,
                 50
+            );
+            ctx.fillText(
+                `Pending: ${this.player.pendingWaypoints.length} waypoints`,
+                10,
+                70
             );
         }
         
@@ -181,7 +215,14 @@ class Game {
         ctx.fillText(
             `Persp Origin: ${this.camera.perspectiveOriginX.toFixed(1)}, ${this.camera.perspectiveOriginY.toFixed(1)}`,
             10,
-            70
+            90
+        );
+        
+        // Draw position info
+        ctx.fillText(
+            `Logical: ${this.player.tileX}, ${this.player.tileY} | Anim: ${this.player.animX.toFixed(2)}, ${this.player.animY.toFixed(2)}`,
+            10,
+            110
         );
         
         // Draw controls help
@@ -228,6 +269,8 @@ class Game {
         this.player.animY = Constants.PLAYER_START.Y;
         this.player.targetX = Constants.PLAYER_START.X;
         this.player.targetY = Constants.PLAYER_START.Y;
+        this.player.lastProcessedTargetX = Constants.PLAYER_START.X;
+        this.player.lastProcessedTargetY = Constants.PLAYER_START.Y;
         
         // Reset perspective origin to player position
         const playerWorldPos = this.player.getWorldPosition();
