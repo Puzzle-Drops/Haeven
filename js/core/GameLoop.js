@@ -10,9 +10,6 @@ class GameLoop {
         this.tickAccumulator = 0;
         this.frameAccumulator = 0;
         
-        // Tick counter
-        this.currentTick = 0;
-        
         // Callbacks
         this.onTick = null;
         this.onUpdate = null;
@@ -45,7 +42,6 @@ class GameLoop {
         this.running = true;
         this.lastTime = performance.now();
         this.fpsUpdateTime = this.lastTime;
-        this.currentTick = 0;
         this.animationId = requestAnimationFrame(this.loop);
     }
     
@@ -73,18 +69,14 @@ class GameLoop {
                 this.onTick(this.tickRate);
             }
             this.tickAccumulator -= this.tickRate;
-            this.currentTick++;
         }
         
         // Frame rate limiting for rendering
         this.frameAccumulator += deltaTime;
         if (this.frameAccumulator >= this.frameTime) {
-            // Calculate tick progress (0-1 within current tick)
-            const tickProgress = this.getTickProgress();
-            
             // Update animations and other frame-dependent logic
             if (this.onUpdate) {
-                this.onUpdate(this.frameAccumulator, tickProgress);
+                this.onUpdate(this.frameAccumulator);
             }
             
             // Render
@@ -113,11 +105,6 @@ class GameLoop {
     // Get current FPS
     getFPS() {
         return this.fps;
-    }
-    
-    // Get current tick number
-    getCurrentTick() {
-        return this.currentTick;
     }
     
     // Get tick progress (0-1)
@@ -155,6 +142,5 @@ class GameLoop {
         this.frameAccumulator = 0;
         this.frameCount = 0;
         this.fps = 0;
-        this.currentTick = 0;
     }
 }
