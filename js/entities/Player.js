@@ -128,6 +128,7 @@ class Player {
     
     // Process movement for this game tick
     processTick() {
+        // If no path, don't process anything
         if (this.path.length === 0) {
             return false;
         }
@@ -143,7 +144,8 @@ class Player {
             this.tileY = nextTile.y;
         }
         
-        // ACTIVATE PENDING WAYPOINTS - replacing any existing ones
+        // ONLY activate pending waypoints AFTER we've actually moved
+        // This ensures waypoints are replaced at tick boundaries, not mid-tick
         if (this.pendingWaypoints.length > 0) {
             // Clear existing animation waypoints and reset animation state
             this.animationWaypoints = [...this.pendingWaypoints];
