@@ -191,7 +191,7 @@ class Player {
         const baseSpeed = tilesPerTick * ticksPerSecond;
         
         // Constant speed multiplier of 1.3
-        const speedMultiplier = 1.3;
+        const speedMultiplier = 1.1;
         
         // Calculate actual speed in tiles per second
         const actualSpeed = baseSpeed * speedMultiplier;
