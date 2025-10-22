@@ -24,6 +24,7 @@ class GameLoop {
         this.lastTickDuration = 0;
         this.lastTickStartTime = 0;
         this.timeSinceLastTick = 0;
+        this.currentTickStartTime = 0;
         
         // Loop state
         this.running = false;
@@ -47,7 +48,7 @@ class GameLoop {
         this.running = true;
         this.lastTime = performance.now();
         this.fpsUpdateTime = this.lastTime;
-        this.lastTickStartTime = this.lastTime;
+        this.lastTickStartTime = 0; // Will be set on first tick
         this.animationId = requestAnimationFrame(this.loop);
     }
     
@@ -71,20 +72,28 @@ class GameLoop {
         // Fixed timestep for game logic (ticks)
         this.tickAccumulator += deltaTime;
         while (this.tickAccumulator >= this.tickRate) {
-            // Track time since last tick
-            this.timeSinceLastTick = currentTime - this.lastTickStartTime;
+            // Measure time at the VERY START of this tick
+            this.currentTickStartTime = performance.now();
             
-            // Start timing this tick
-            const tickStartTime = performance.now();
+            // Calculate time since last tick started
+            if (this.lastTickStartTime > 0) {
+                this.timeSinceLastTick = this.currentTickStartTime - this.lastTickStartTime;
+            } else {
+                // First tick ever
+                this.timeSinceLastTick = 0;
+            }
             
+            // Execute tick logic
             if (this.onTick) {
                 this.onTick(this.tickRate);
             }
             
-            // Calculate tick duration
+            // Calculate how long the tick logic took to execute
             const tickEndTime = performance.now();
-            this.lastTickDuration = tickEndTime - tickStartTime;
-            this.lastTickStartTime = tickStartTime;
+            this.lastTickDuration = tickEndTime - this.currentTickStartTime;
+            
+            // Store this tick's start time for next tick
+            this.lastTickStartTime = this.currentTickStartTime;
             
             this.tickAccumulator -= this.tickRate;
         }
