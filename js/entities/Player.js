@@ -29,6 +29,7 @@ class Player {
         this.currentAnimationStart = { x: startX, y: startY };
         this.currentAnimationTarget = null;
         this.segmentProgress = 0;
+        this.catchupMode = false; // Hysteresis flag for speed catchup
         
         // Visual properties
         this.color = Constants.COLORS.PLAYER;
@@ -204,6 +205,19 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
+        // Calculate lag distance for catchup mode
+        const lagDistance = Math.sqrt(
+            Math.pow(this.tileX - this.animX, 2) + 
+            Math.pow(this.tileY - this.animY, 2)
+        );
+        
+        // Hysteresis: 3.5 tiles to turn on, 2.5 tiles to turn off
+        if (!this.catchupMode && lagDistance > 3.5) {
+            this.catchupMode = true;
+        } else if (this.catchupMode && lagDistance < 2.5) {
+            this.catchupMode = false;
+        }
+        
         // SPEED CALCULATION:
         // Logical position moves 2 tiles per 600ms tick when running (1 tile when walking)
         // Animation needs to complete in 600ms to stay synchronized
@@ -211,7 +225,8 @@ class Player {
         // Walking: 1 tile / 0.6 seconds = 1.67 tiles/second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const tickDuration = Constants.TICK_RATE / 1000; // Convert to seconds
-        const baseSpeed = 0.75 * (tilesPerTick / tickDuration); // tiles per second
+        const catchupMultiplier = this.catchupMode ? 1.5 : 1.0;
+        const baseSpeed = 0.75 * (tilesPerTick / tickDuration) * catchupMultiplier; // tiles per second
         
         // Apply diagonal speed modifier
         // Diagonal moves cover sqrt(2) distance, so we need sqrt(2) speed to maintain timing
@@ -275,5 +290,13 @@ class Player {
         return this.tileX === this.targetX && 
                this.tileY === this.targetY && 
                !this.isMoving();
+    }
+    
+    // Get current lag distance (for debug display)
+    getLagDistance() {
+        return Math.sqrt(
+            Math.pow(this.tileX - this.animX, 2) + 
+            Math.pow(this.tileY - this.animY, 2)
+        );
     }
 }
