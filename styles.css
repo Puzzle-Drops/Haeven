@@ -46,6 +46,22 @@ canvas#gameCanvas {
     image-rendering: crisp-edges;
 }
 
+/* Minimap canvas */
+canvas#minimapCanvas {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: block;
+    cursor: pointer;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    border: 2px solid #FFD700;
+    box-sizing: border-box;
+    pointer-events: auto;
+    z-index: 100;
+}
+
 /* Loading state */
 .loading {
     position: absolute;
