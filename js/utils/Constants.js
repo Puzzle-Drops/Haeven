@@ -10,6 +10,7 @@ const Constants = {
     TILE_SIZE: 164,
     WORLD_WIDTH: 40,
     WORLD_HEIGHT: 40,
+    TILE_OVERLAP: 2, // Overlap to prevent gaps between tiles
     
     // Perspective settings (45-degree pitch with depth scaling)
     PERSPECTIVE: {
@@ -23,8 +24,11 @@ const Constants = {
     MINIMAP: {
         WIDTH: 512,
         HEIGHT: 288,
-        ZOOM_MULTIPLIER: 0.125,
-        DEFAULT_ZOOM: 0.8,
+        ZOOM_MULTIPLIER: 0.125,      // Makes minimap 8x more zoomed out
+        DEFAULT_ZOOM: 0.8,            // User-facing default zoom
+        PLAYER_WIDTH: 2,              // Player dot width radius at default zoom
+        PLAYER_HEIGHT: 4,             // Player dot height radius at default zoom
+        HIGHLIGHT_WIDTH: 2,           // Tile highlight border thickness
         PLAYER_COLOR: '#FFD700',
         PATH_COLOR: 'rgba(255, 255, 255, 0.8)',
         FRAME_COLOR: '#FFD700',
