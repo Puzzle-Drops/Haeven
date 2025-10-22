@@ -179,63 +179,85 @@ class Game {
     renderDebugOverlay() {
         const ctx = this.renderer.ctx;
         
-        // Draw FPS counter
-        ctx.fillStyle = '#00ff00';
+        // Set up text rendering
         ctx.font = '16px monospace';
+        const lineHeight = 20;
+        let yPos = 20;
+        
+        // Draw FPS counter (top right)
+        ctx.fillStyle = '#00ff00';
         ctx.textAlign = 'right';
         ctx.fillText(
             `FPS: ${this.gameLoop.getFPS()}`,
             this.canvas.width - 10,
-            30
+            yPos
         );
         
-        // Draw movement mode indicator
+        // Switch to left-aligned for rest of debug info
         ctx.textAlign = 'left';
+        
+        // Draw movement mode indicator
         ctx.fillStyle = this.player.running ? '#00ff00' : '#ffff00';
         ctx.fillText(
             `Mode: ${this.player.running ? 'RUNNING' : 'WALKING'}`,
             10,
-            30
+            yPos
         );
-        
-        // Draw path info
-        if (this.player.isMoving()) {
-            ctx.fillStyle = '#00ff00';
-            ctx.fillText(
-                `Path: ${this.player.path.length} tiles | Anim: ${this.player.animationWaypoints.length} waypoints`,
-                10,
-                50
-            );
-            ctx.fillText(
-                `Pending: ${this.player.pendingWaypoints.length} waypoints`,
-                10,
-                70
-            );
-        }
-        
-        // Draw perspective origin info
-        ctx.fillStyle = '#00ff00';
-        ctx.fillText(
-            `Persp Origin: ${this.camera.perspectiveOriginX.toFixed(1)}, ${this.camera.perspectiveOriginY.toFixed(1)}`,
-            10,
-            90
-        );
+        yPos += lineHeight;
         
         // Draw position info
+        ctx.fillStyle = '#00ff00';
         ctx.fillText(
             `Logical: ${this.player.tileX}, ${this.player.tileY} | Anim: ${this.player.animX.toFixed(2)}, ${this.player.animY.toFixed(2)}`,
             10,
-            110
+            yPos
+        );
+        yPos += lineHeight;
+        
+        // Draw path info
+        if (this.player.isMoving()) {
+            ctx.fillText(
+                `Path: ${this.player.path.length} tiles | Anim: ${this.player.animationWaypoints.length} waypoints`,
+                10,
+                yPos
+            );
+            yPos += lineHeight;
+            ctx.fillText(
+                `Pending: ${this.player.pendingWaypoints.length} waypoints`,
+                10,
+                yPos
+            );
+            yPos += lineHeight;
+        }
+        
+        // Draw perspective origin info
+        ctx.fillText(
+            `Persp Origin: ${this.camera.perspectiveOriginX.toFixed(1)}, ${this.camera.perspectiveOriginY.toFixed(1)}`,
+            10,
+            yPos
+        );
+        yPos += lineHeight;
+        
+        // Draw zoom info
+        ctx.fillText(
+            `Zoom: ${(this.camera.zoom * 100).toFixed(0)}%`,
+            10,
+            yPos
         );
         
-        // Draw controls help
-        ctx.fillStyle = '#00ff00';
-        ctx.fillText('Controls:', 10, this.canvas.height - 110);
-        ctx.fillText('Left Click - Move (run mode)', 10, this.canvas.height - 90);
-        ctx.fillText('Ctrl+Click - Move (force walk)', 10, this.canvas.height - 70);
-        ctx.fillText('S - Stop moving', 10, this.canvas.height - 50);
-        ctx.fillText('R - Toggle run/walk mode', 10, this.canvas.height - 30);
-        ctx.fillText('P - Pause | Shift+R - Reset | Shift+D - Debug', 10, this.canvas.height - 10);
+        // Draw controls help (bottom left)
+        yPos = this.canvas.height - 110;
+        ctx.fillText('Controls:', 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText('Left Click - Move (run mode)', 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText('Ctrl+Click - Move (force walk)', 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText('S - Stop moving', 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText('R - Toggle run/walk mode', 10, yPos);
+        yPos += lineHeight;
+        ctx.fillText('P - Pause | Shift+R - Reset | Shift+D - Debug', 10, yPos);
     }
     
     // Start the game
