@@ -150,12 +150,25 @@ class Player {
         return true;
     }
     
-    // Update animation state (SDK-style with dynamic speed)
+    // Update animation state
     updateAnimation(deltaTime) {
-        // If no waypoints, ensure we're at the correct position
+        // If no waypoints, smoothly move toward logical position
         if (this.animationWaypoints.length === 0) {
-            this.animX = this.tileX;
-            this.animY = this.tileY;
+            // Smooth catchup to logical position when animation completes
+            const dx = this.tileX - this.animX;
+            const dy = this.tileY - this.animY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0.01) {
+                // Gentle smoothing toward final position
+                const smoothingSpeed = 0.15;
+                this.animX += dx * smoothingSpeed;
+                this.animY += dy * smoothingSpeed;
+            } else {
+                this.animX = this.tileX;
+                this.animY = this.tileY;
+            }
+            
             this.currentAnimationTarget = null;
             return;
         }
@@ -172,29 +185,23 @@ class Player {
         const dy = this.currentAnimationTarget.y - this.currentAnimationStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // SDK-STYLE DYNAMIC SPEED
+        // SLOWER BASE SPEED - tiles per second
         const tilesPerTick = this.currentAnimationTarget.run ? 2 : 1;
         const ticksPerSecond = 1000 / Constants.TICK_RATE;
-        const baseSpeed = tilesPerTick * ticksPerSecond;
+        const baseSpeed = tilesPerTick * ticksPerSecond * 0.7; // 70% of tick speed for smoother look
         
-        // Dynamic speed adjustment based on buffer size
+        // Gentle speed adjustment based on buffer size
         let speedMultiplier = 1;
         const bufferSize = this.animationWaypoints.length;
         
-        if (bufferSize >= 4) {
-            speedMultiplier = 2;
+        if (bufferSize >= 5) {
+            speedMultiplier = 1.3; // Gentle speedup if way behind
         } else if (bufferSize >= 3) {
-            speedMultiplier = 1.5;
-        } else if (bufferSize === 0 && this.segmentProgress > 0) {
-            speedMultiplier = 0.9;
+            speedMultiplier = 1.15; // Slight speedup if behind
         }
         
-        // For diagonal movement, adjust speed to cover distance in same time
-        const isOrthogonal = (dx === 0 || dy === 0);
-        const distanceAdjustment = isOrthogonal ? 1 : Math.sqrt(2);
-        
         // Calculate actual speed in tiles per second
-        const actualSpeed = baseSpeed * speedMultiplier * distanceAdjustment;
+        const actualSpeed = baseSpeed * speedMultiplier;
         
         // Update segment progress based on speed and time
         if (distance > 0) {
