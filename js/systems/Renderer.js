@@ -53,24 +53,35 @@ class Renderer {
     }
     
     // Render a single tile with perspective projection
-    renderTile(tile, camera, hoveredTile) {
-        const tileSize = Constants.TILE_SIZE;
-        const overlap = 0.5; // Slight overlap to eliminate gaps
-        
-        // Get the four corners of the tile in world space with overlap
-        const topLeft = { x: tile.x * tileSize - overlap, y: tile.y * tileSize - overlap };
-        const topRight = { x: (tile.x + 1) * tileSize + overlap, y: tile.y * tileSize - overlap };
-        const bottomLeft = { x: tile.x * tileSize - overlap, y: (tile.y + 1) * tileSize + overlap };
-        const bottomRight = { x: (tile.x + 1) * tileSize + overlap, y: (tile.y + 1) * tileSize + overlap };
-        
-        // Convert to screen space (with perspective scaling)
-        const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
-        const screenTR = camera.worldToScreen(topRight.x, topRight.y);
-        const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
-        const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
-        
-        // Draw tile as a trapezoid
-        this.ctx.fillStyle = tile.getDisplayColor();
+renderTile(tile, camera, hoveredTile) {
+    const tileSize = Constants.TILE_SIZE;
+    const overlap = Constants.TILE_OVERLAP; // Use constant instead of hardcoded value
+    
+    // Get the four corners of the tile in world space with overlap
+    const topLeft = { x: tile.x * tileSize - overlap, y: tile.y * tileSize - overlap };
+    const topRight = { x: (tile.x + 1) * tileSize + overlap, y: tile.y * tileSize - overlap };
+    const bottomLeft = { x: tile.x * tileSize - overlap, y: (tile.y + 1) * tileSize + overlap };
+    const bottomRight = { x: (tile.x + 1) * tileSize + overlap, y: (tile.y + 1) * tileSize + overlap };
+    
+    // Convert to screen space (with perspective scaling)
+    const screenTL = camera.worldToScreen(topLeft.x, topLeft.y);
+    const screenTR = camera.worldToScreen(topRight.x, topRight.y);
+    const screenBL = camera.worldToScreen(bottomLeft.x, bottomLeft.y);
+    const screenBR = camera.worldToScreen(bottomRight.x, bottomRight.y);
+    
+    // Draw tile as a trapezoid
+    this.ctx.fillStyle = tile.getDisplayColor();
+    this.ctx.beginPath();
+    this.ctx.moveTo(screenTL.x, screenTL.y);
+    this.ctx.lineTo(screenTR.x, screenTR.y);
+    this.ctx.lineTo(screenBR.x, screenBR.y);
+    this.ctx.lineTo(screenBL.x, screenBL.y);
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Draw hover effect
+    if (hoveredTile && tile.x === hoveredTile.x && tile.y === hoveredTile.y && tile.walkable) {
+        this.ctx.fillStyle = Constants.COLORS.HOVER;
         this.ctx.beginPath();
         this.ctx.moveTo(screenTL.x, screenTL.y);
         this.ctx.lineTo(screenTR.x, screenTR.y);
@@ -78,19 +89,8 @@ class Renderer {
         this.ctx.lineTo(screenBL.x, screenBL.y);
         this.ctx.closePath();
         this.ctx.fill();
-        
-        // Draw hover effect
-        if (hoveredTile && tile.x === hoveredTile.x && tile.y === hoveredTile.y && tile.walkable) {
-            this.ctx.fillStyle = Constants.COLORS.HOVER;
-            this.ctx.beginPath();
-            this.ctx.moveTo(screenTL.x, screenTL.y);
-            this.ctx.lineTo(screenTR.x, screenTR.y);
-            this.ctx.lineTo(screenBR.x, screenBR.y);
-            this.ctx.lineTo(screenBL.x, screenBL.y);
-            this.ctx.closePath();
-            this.ctx.fill();
-        }
     }
+}
     
     // Render tile highlights
     renderTileHighlights(player, camera) {
