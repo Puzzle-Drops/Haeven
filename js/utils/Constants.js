@@ -8,8 +8,8 @@ const Constants = {
     
     // Tile and world settings
     TILE_SIZE: 164,
-    WORLD_WIDTH: 40,
-    WORLD_HEIGHT: 40,
+    WORLD_WIDTH: 500,
+    WORLD_HEIGHT: 500,
     TILE_OVERLAP: 2, // Overlap to prevent gaps between tiles
     
     // Perspective settings (45-degree pitch with depth scaling)
@@ -60,7 +60,7 @@ const Constants = {
     
     // Player settings
     PLAYER_START: {
-        X: 20,
-        Y: 20
+        X: 250,
+        Y: 450
     }
 };
