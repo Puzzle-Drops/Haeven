@@ -4,43 +4,57 @@ class World {
         this.width = width;
         this.height = height;
         this.tiles = [];
-        
-        this.generateWorld();
+        this.loaded = false;
     }
     
-    generateWorld() {
+    async loadFromJSON(jsonPath = 'world.json') {
+        try {
+            console.log('Loading world from JSON...');
+            const response = await fetch(jsonPath);
+            if (!response.ok) {
+                throw new Error(`Failed to load world data: ${response.statusText}`);
+            }
+            
+            const worldData = await response.json();
+            
+            // Validate world data
+            if (!worldData.metadata || !worldData.tileTypes || !worldData.terrain) {
+                throw new Error('Invalid world data format');
+            }
+            
+            // Set dimensions from metadata
+            this.width = worldData.metadata.width;
+            this.height = worldData.metadata.height;
+            
+            // Store tile type definitions
+            this.tileTypes = worldData.tileTypes;
+            
+            // Generate world from terrain data
+            this.generateFromData(worldData.terrain);
+            
+            this.loaded = true;
+            console.log(`World loaded: ${this.width}x${this.height} tiles`);
+            
+            return worldData.metadata;
+        } catch (error) {
+            console.error('Error loading world:', error);
+            throw error;
+        }
+    }
+    
+    generateFromData(terrainData) {
         // Initialize tile array
         for (let y = 0; y < this.height; y++) {
             this.tiles[y] = [];
             for (let x = 0; x < this.width; x++) {
-                // Generate terrain
-                const isWall = this.shouldBeWall(x, y);
-                const color = this.getTileColor(x, y, isWall);
-                this.tiles[y][x] = new Tile(x, y, !isWall, color);
+                // Get tile type from data (or default to grass)
+                const tileTypeName = terrainData[y] && terrainData[y][x] !== '...' ? terrainData[y][x] : 'grass';
+                const tileType = this.tileTypes[tileTypeName] || this.tileTypes['grass'];
+                
+                // Create tile with type properties
+                this.tiles[y][x] = new Tile(x, y, tileType.walkable, tileType.color);
             }
         }
-    }
-    
-    shouldBeWall(x, y) {
-        // Don't place walls at player start position
-        if (x === Constants.PLAYER_START.X && y === Constants.PLAYER_START.Y) {
-            return false;
-        }
-        
-        // Random wall generation with 20% chance
-        return Math.random() < 0.2;
-    }
-    
-    getTileColor(x, y, isWall) {
-        if (isWall) {
-            return Constants.COLORS.WALL;
-        }
-        
-        // Vary ground colors slightly for visual interest
-        const hue = 120; // Green
-        const saturation = 20;
-        const lightness = 35 + Math.random() * 10;
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
     
     getTile(x, y) {
