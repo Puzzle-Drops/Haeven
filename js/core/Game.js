@@ -34,20 +34,22 @@ class Game {
         
         // Tick counter (for debugging timing)
         this.tickCount = 0;
-        
-        // Initialize all systems
-        this.initialize();
     }
     
-    initialize() {
+    async initialize() {
         // Initialize scaling system
         this.scalingSystem.initialize();
         
-        // Create world
+        // Create world and load from JSON
         this.world = new World(Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
+        const metadata = await this.world.loadFromJSON('world.json');
+        
+        // Use spawn position from metadata if available, otherwise use Constants
+        const spawnX = metadata.spawn?.x || Constants.PLAYER_START.X;
+        const spawnY = metadata.spawn?.y || Constants.PLAYER_START.Y;
         
         // Create player at start position
-        this.player = new Player(Constants.PLAYER_START.X, Constants.PLAYER_START.Y);
+        this.player = new Player(spawnX, spawnY);
         
         // Create main camera
         this.camera = new Camera(
@@ -367,7 +369,7 @@ ctx.fillText(
     }
     
     // Start the game
-    start() {
+    async start() {
         console.log('Starting Tile-Based RPG...');
         console.log('Movement mode: RUNNING (press R to toggle)');
         this.gameLoop.start();
