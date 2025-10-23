@@ -5,13 +5,18 @@
 let game = null;
 
 // Wait for DOM to be fully loaded
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Tile-Based RPG...');
     
     try {
-        // Create and start the game
+        // Create game instance
         game = new Game();
-        game.start();
+        
+        // Initialize game (loads world from JSON)
+        await game.initialize();
+        
+        // Start the game loop
+        await game.start();
         
         console.log('Game initialized successfully');
     } catch (error) {
